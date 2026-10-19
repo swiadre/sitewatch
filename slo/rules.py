@@ -78,8 +78,8 @@ def events_expr(slo: dict, window: str) -> str:
 
 
 def min_events(slo: dict, window: str) -> int:
-    expected = WINDOW_SECONDS[window] / slo["probe_interval_seconds"]
-    return int(expected * slo["min_data_fraction"])
+    expected = WINDOW_SECONDS[window] / slo.get("probe_interval_seconds", 30)
+    return int(expected * slo.get("min_data_fraction", 0.5))
 
 
 def recording_rules(slo: dict) -> list[dict]:
