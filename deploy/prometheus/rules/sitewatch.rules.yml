@@ -1,0 +1,28 @@
+groups:
+  - name: sitewatch
+    rules:
+      # if the prober dies we have no data at all, and the SLO alerts can't fire.
+      # this one watches the watcher
+      - alert: ProberDown
+        expr: up{job="sitewatch-prober"} == 0 or absent(up{job="sitewatch-prober"})
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: sitewatch prober is down, sites are NOT being monitored
+
+      - alert: TLSCertExpiringSoon
+        expr: tls_cert_days_left < 14
+        for: 1h
+        labels:
+          severity: ticket
+        annotations:
+          summary: "{{ $labels.site }}: TLS certificate expires in {{ $value | printf \"%.0f\" }} days"
+
+      - alert: TLSCertExpiringVerySoon
+        expr: tls_cert_days_left < 3
+        for: 10m
+        labels:
+          severity: page
+        annotations:
+          summary: "{{ $labels.site }}: TLS certificate expires in {{ $value | printf \"%.1f\" }} days!"

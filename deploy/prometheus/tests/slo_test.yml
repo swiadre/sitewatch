@@ -1,0 +1,106 @@
+# promtool unit tests for the SLO alerts
+# run: promtool test rules deploy/prometheus/tests/slo_test.yml
+rule_files:
+  - ../rules/slo.rules.yml
+  - ../rules/sitewatch.rules.yml
+
+evaluation_interval: 30s
+
+tests:
+  # 1) one random failed probe should NOT wake anybody up
+  #    (needs 3 days of history - with only ~1h of data the 6h window has very few
+  #    probes and even 1 failure looks like a big error ratio, see slo/README.md)
+  - interval: 30s
+    input_series:
+      - series: 'probes_total{site="kuponradar",result="success"}'
+        values: '0+1x8700'
+      - series: 'probes_total{site="kuponradar",result="failure"}'
+        values: '0x8640 1x60'
+      - series: 'up{job="sitewatch-prober"}'
+        values: '1x8700'
+    alert_rule_test:
+      - eval_time: 72h10m
+        alertname: ErrorBudgetBurnFast
+        exp_alerts: []
+      - eval_time: 72h10m
+        alertname: ErrorBudgetBurnSlow
+        exp_alerts: []
+
+  # 2) site completely down for 10 minutes -> fast burn page
+  - interval: 30s
+    input_series:
+      - series: 'probes_total{site="kuponradar",result="success"}'
+        values: '0+1x100 100x20'
+      - series: 'probes_total{site="kuponradar",result="failure"}'
+        values: '0x100 1+1x20'
+      - series: 'up{job="sitewatch-prober"}'
+        values: '1x120'
+    alert_rule_test:
+      - eval_time: 50m
+        alertname: ErrorBudgetBurnFast
+        exp_alerts: []
+      - eval_time: 60m
+        alertname: ErrorBudgetBurnFast
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              site: kuponradar
+              slo: availability
+            exp_annotations:
+              summary: "kuponradar: availability SLO is burning error budget too fast"
+              description: "error ratio 16.67%, objective 99.900%"
+
+  # 3) small but constant error rate (1 failed probe every 200 min = 0.5%)
+  #    burns budget 5x faster than allowed -> ticket, but not a page
+  - interval: 1m
+    input_series:
+      - series: 'probes_total{site="kuponradar",result="success"}'
+        values: '0+1x2300'
+      - series: 'probes_total{site="kuponradar",result="failure"}'
+        values: '0x199 1x199 2x199 3x199 4x199 5x199 6x199 7x199 8x199 9x199 10x199 11x199'
+      - series: 'up{job="sitewatch-prober"}'
+        values: '1x2300'
+    alert_rule_test:
+      - eval_time: 1560m
+        alertname: ErrorBudgetBurnFast
+        exp_alerts: []
+      - eval_time: 1560m
+        alertname: ErrorBudgetBurnSlow
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              site: kuponradar
+              slo: availability
+            exp_annotations:
+              summary: "kuponradar: availability SLO is burning error budget too fast"
+              description: "error ratio 0.4467%, objective 99.900%"
+
+  # 4) prober itself is dead
+  - interval: 30s
+    input_series:
+      - series: 'up{job="sitewatch-prober"}'
+        values: '1x10 0x10'
+    alert_rule_test:
+      - eval_time: 10m
+        alertname: ProberDown
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              job: sitewatch-prober
+            exp_annotations:
+              summary: sitewatch prober is down, sites are NOT being monitored
+
+  # 5) cert about to expire
+  - interval: 1m
+    input_series:
+      - series: 'tls_cert_days_left{site="kuponradar"}'
+        values: '10x120'
+    alert_rule_test:
+      - eval_time: 90m
+        alertname: TLSCertExpiringSoon
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              site: kuponradar
+            exp_annotations:
+              summary: "kuponradar: TLS certificate expires in 10 days"

@@ -23,3 +23,18 @@ jobs:
 
       - name: Tests
         run: pytest -v
+
+  prometheus-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check rules syntax
+        run: >
+          docker run --rm --entrypoint promtool -v "$PWD/deploy/prometheus:/p:ro"
+          prom/prometheus:v2.54.1 check rules /p/rules/slo.rules.yml /p/rules/sitewatch.rules.yml
+
+      - name: Alert unit tests
+        run: >
+          docker run --rm --entrypoint promtool -v "$PWD/deploy/prometheus:/p:ro" -w /p/tests
+          prom/prometheus:v2.54.1 test rules slo_test.yml
