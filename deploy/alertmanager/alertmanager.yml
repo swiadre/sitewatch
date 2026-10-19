@@ -1,9 +1,19 @@
 route:
   receiver: remediator
   group_by: [alertname, site]
-  group_wait: 5s        # short, the remediator should act fast
+  group_wait: 5s
   group_interval: 1m
   repeat_interval: 4h
+
+  routes:
+    # alerts with an automatic fix need to reach the remediator FAST.
+    # with group_interval 1m a new alert that lands in a group which still exists
+    # (Prometheus keeps re-sending "resolved" for a while) waits for the next 1m tick.
+    # found this in the chaos tests: MTTD went from ~27s to ~38s, see chaos/README.md
+    - matchers: ['remediation=~".+"']
+      receiver: remediator
+      group_wait: 0s
+      group_interval: 5s
 
 receivers:
   - name: remediator
