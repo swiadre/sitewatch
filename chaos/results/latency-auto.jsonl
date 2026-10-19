@@ -8,3 +8,6 @@
 {"scenario": "latency", "mode": "auto", "t0": 1792425245.676553, "went_down_s": 1.81, "mttd_s": 21.7, "mttr_s": 22.25, "recovered": true, "action": "restart", "action_at_s": 21.85, "run": 8}
 {"scenario": "latency", "mode": "auto", "t0": 1792425349.186452, "went_down_s": 1.78, "mttd_s": 21.8, "mttr_s": 22.31, "recovered": true, "action": "restart", "action_at_s": 21.95, "run": 9}
 {"scenario": "latency", "mode": "auto", "t0": 1792425452.738461, "went_down_s": 1.74, "mttd_s": 22.37, "mttr_s": 22.91, "recovered": true, "action": "restart", "action_at_s": 22.53, "run": 10}
+{"scenario": "latency", "mode": "auto", "t0": 1792430192.805482, "went_down_s": 1.81, "mttd_s": 24.27, "mttr_s": 24.76, "recovered": true, "action": "restart", "action_at_s": 24.46, "run": 1}
+{"scenario": "latency", "mode": "auto", "t0": 1792430303.8518138, "went_down_s": 1.8, "mttd_s": 22.39, "mttr_s": 22.83, "recovered": true, "action": "restart", "action_at_s": 22.58, "run": 2}
+{"scenario": "latency", "mode": "auto", "t0": 1792430407.8985212, "went_down_s": 1.8, "mttd_s": 22.36, "mttr_s": 22.83, "recovered": true, "action": "restart", "action_at_s": 22.51, "run": 3}
