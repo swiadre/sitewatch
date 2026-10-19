@@ -36,3 +36,9 @@ def test_record_failure():
     metrics.record(make_report("metrics-bad", http_ok=False))
     assert value("probe_success", site="metrics-bad") == 0
     assert value("probes_total", site="metrics-bad", result="failure") == 1
+
+
+def test_init_site_creates_failure_counter():
+    metrics.init_site("metrics-new")
+    assert value("probes_total", site="metrics-new", result="failure") == 0
+    assert value("probes_total", site="metrics-new", result="success") == 0

@@ -67,6 +67,9 @@ def format_report(r: SiteReport) -> str:
 
 
 async def run(config: Config, once: bool = False) -> None:
+    for site in config.sites:
+        metrics.init_site(site.name)
+
     async with httpx.AsyncClient(timeout=config.timeout_seconds) as client:
         while True:
             started = time.monotonic()

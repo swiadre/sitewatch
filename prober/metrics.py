@@ -19,6 +19,16 @@ def start_metrics_server(port: int) -> None:
     start_http_server(port)
 
 
+def init_site(site: str) -> None:
+    """Create the counters with 0 at startup.
+
+    Without this probes_total{result="failure"} doesn't exist until the first failure,
+    and then the SLO error ratio query returns *no data* instead of 0.
+    """
+    PROBES_TOTAL.labels(site, "success")
+    PROBES_TOTAL.labels(site, "failure")
+
+
 def record(report) -> None:
     """Update all metrics from one SiteReport."""
     site = report.site.name
