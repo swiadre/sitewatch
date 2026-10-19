@@ -1,0 +1,10 @@
+{"scenario": "kill", "mode": "auto", "t0": 1792420112.6292639, "went_down_s": 0.23, "mttd_s": 18.95, "mttr_s": 19.1, "recovered": true, "action": "restart", "action_at_s": 19.08, "run": 1}
+{"scenario": "kill", "mode": "auto", "t0": 1792420212.813344, "went_down_s": 0.17, "mttd_s": 18.22, "mttr_s": 18.57, "recovered": true, "action": "restart", "action_at_s": 18.34, "run": 2}
+{"scenario": "kill", "mode": "auto", "t0": 1792420312.468203, "went_down_s": 0.22, "mttd_s": 18.13, "mttr_s": 18.61, "recovered": true, "action": "restart", "action_at_s": 18.24, "run": 3}
+{"scenario": "kill", "mode": "auto", "t0": 1792420412.1674612, "went_down_s": 0.24, "mttd_s": 18.0, "mttr_s": 18.12, "recovered": true, "action": "restart", "action_at_s": 18.09, "run": 4}
+{"scenario": "kill", "mode": "auto", "t0": 1792420511.3682408, "went_down_s": 0.17, "mttd_s": 18.48, "mttr_s": 19.06, "recovered": true, "action": "restart", "action_at_s": 18.65, "run": 5}
+{"scenario": "kill", "mode": "auto", "t0": 1792420611.506284, "went_down_s": 0.19, "mttd_s": 17.89, "mttr_s": 18.1, "recovered": true, "action": "restart", "action_at_s": 18.0, "run": 6}
+{"scenario": "kill", "mode": "auto", "t0": 1792420710.676089, "went_down_s": 0.2, "mttd_s": 18.28, "mttr_s": 18.59, "recovered": true, "action": "restart", "action_at_s": 18.38, "run": 7}
+{"scenario": "kill", "mode": "auto", "t0": 1792420810.376532, "went_down_s": 0.17, "mttd_s": 18.48, "mttr_s": 18.56, "recovered": true, "action": "restart", "action_at_s": 18.56, "run": 8}
+{"scenario": "kill", "mode": "auto", "t0": 1792420910.002675, "went_down_s": 0.18, "mttd_s": 18.85, "mttr_s": 19.11, "recovered": true, "action": "restart", "action_at_s": 18.95, "run": 9}
+{"scenario": "kill", "mode": "auto", "t0": 1792421010.198818, "went_down_s": 0.17, "mttd_s": 18.55, "mttr_s": 18.59, "recovered": true, "action": "restart", "action_at_s": 18.65, "run": 10}

@@ -1,0 +1,10 @@
+{"scenario": "disk", "mode": "auto", "t0": 1792425556.8849869, "went_down_s": 0.13, "mttd_s": 17.3, "mttr_s": 17.59, "recovered": true, "action": "cleanup_disk", "action_at_s": 17.34, "run": 1}
+{"scenario": "disk", "mode": "auto", "t0": 1792425655.59285, "went_down_s": 0.11, "mttd_s": 17.67, "mttr_s": 18.07, "recovered": true, "action": "cleanup_disk", "action_at_s": 17.71, "run": 2}
+{"scenario": "disk", "mode": "auto", "t0": 1792426689.552054, "went_down_s": 0.17, "mttd_s": 17.02, "mttr_s": 17.2, "recovered": true, "action": "cleanup_disk", "action_at_s": 17.04, "run": 3}
+{"scenario": "disk", "mode": "auto", "t0": 1792427976.340311, "went_down_s": 0.11, "mttd_s": 17.45, "mttr_s": 17.67, "recovered": true, "action": "cleanup_disk", "action_at_s": 17.49, "run": 4}
+{"scenario": "disk", "mode": "auto", "t0": 1792428075.234171, "went_down_s": 0.13, "mttd_s": 17.33, "mttr_s": 17.6, "recovered": true, "action": "cleanup_disk", "action_at_s": 17.37, "run": 5}
+{"scenario": "disk", "mode": "auto", "t0": 1792428173.9721239, "went_down_s": 0.16, "mttd_s": 17.58, "mttr_s": 17.62, "recovered": true, "action": "cleanup_disk", "action_at_s": 17.62, "run": 6}
+{"scenario": "disk", "mode": "auto", "t0": 1792428272.767682, "went_down_s": 0.12, "mttd_s": 17.87, "mttr_s": 18.11, "recovered": true, "action": "cleanup_disk", "action_at_s": 17.92, "run": 7}
+{"scenario": "disk", "mode": "auto", "t0": 1792428372.063941, "went_down_s": 0.14, "mttd_s": 17.62, "mttr_s": 17.58, "recovered": true, "action": "cleanup_disk", "action_at_s": 17.67, "run": 8}
+{"scenario": "disk", "mode": "auto", "t0": 1792428470.847363, "went_down_s": 0.13, "mttd_s": 17.86, "mttr_s": 18.11, "recovered": true, "action": "cleanup_disk", "action_at_s": 17.91, "run": 9}
+{"scenario": "disk", "mode": "auto", "t0": 1792428570.1751711, "went_down_s": 0.12, "mttd_s": 17.93, "mttr_s": 18.12, "recovered": true, "action": "cleanup_disk", "action_at_s": 17.97, "run": 10}

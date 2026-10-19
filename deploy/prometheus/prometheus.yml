@@ -26,6 +26,9 @@ scrape_configs:
       - files: ["/etc/prometheus/remote-probers*.json"]
 
   - job_name: remediator
+    # demo_last_deploy_timestamp_seconds comes from here and DemoErrorsAfterDeploy needs it
+    # quickly after a deploy. with the default 15s the first bad deploy was detected ~10s later
+    scrape_interval: 5s
     static_configs:
       - targets: ["remediator:9000"]
 
