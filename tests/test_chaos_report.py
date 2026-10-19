@@ -51,3 +51,12 @@ def test_first_event():
     ]
     assert first_event(events, "alert_firing", ["DemoUnresponsive"])["ts"] == 2
     assert first_event(events, "action_done", ["DemoUnresponsive"]) is None
+
+
+def test_invalid_runs_are_skipped(tmp_path):
+    bad = row("kill", "auto", 280, 281)
+    bad["invalid"] = "laptop went to sleep"
+    write(tmp_path, "kill-auto.jsonl", [row("kill", "auto", 20, 21), bad])
+    (s,) = summarize(load(tmp_path))
+    assert s["runs"] == 1
+    assert s["mttd_mean"] == 20

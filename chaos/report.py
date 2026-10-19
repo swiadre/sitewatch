@@ -38,6 +38,10 @@ def stats(values: list[float]) -> tuple[float | None, float | None, float | None
 def summarize(rows: list[dict]) -> list[dict]:
     groups: dict[tuple[str, str], list[dict]] = {}
     for r in rows:
+        # runs broken by something outside the test (e.g. my laptop went to sleep)
+        # stay in the raw data with a reason, but don't count
+        if r.get("invalid"):
+            continue
         groups.setdefault((r["scenario"], r["mode"]), []).append(r)
 
     summary = []
