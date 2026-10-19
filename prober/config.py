@@ -30,6 +30,8 @@ class Config:
     interval_seconds: float = 30
     timeout_seconds: float = 10
     sites: list[Site] = field(default_factory=list)
+    # very reliable url to tell "the site is down" from "my own network is down"
+    canary_url: str | None = None
 
 
 def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
@@ -44,6 +46,7 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
         interval_seconds=raw.get("interval_seconds", 30),
         timeout_seconds=raw.get("timeout_seconds", 10),
         sites=sites,
+        canary_url=raw.get("canary_url"),
     )
     for site in config.sites:
         if site.interval_seconds is None:

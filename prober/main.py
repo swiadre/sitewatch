@@ -77,13 +77,42 @@ def now() -> str:
     return f"{datetime.now():%Y-%m-%d %H:%M:%S}"
 
 
-async def site_loop(client: httpx.AsyncClient, site: Site) -> None:
+async def canary_ok(client: httpx.AsyncClient, url: str, timeout: float = 5) -> bool:
+    try:
+        resp = await client.get(url, timeout=timeout)
+    except httpx.HTTPError:
+        return False
+    return resp.status_code < 500
+
+
+async def probe_and_record(
+    client: httpx.AsyncClient, site: Site, canary_url: str | None = None
+) -> SiteReport | None:
+    """Probe a site and update metrics. Returns None if the result was thrown away."""
+    report = await probe_site(client, site)
+
+    # if the site failed, check if *we* can reach the internet at all. right after my
+    # laptop woke up, every probe timed out and that paged me for 2 sites that were fine
+    # (postmortems/2026-10-19). a failed canary = our problem, don't count it in the SLO
+    if not report.up and canary_url and not await canary_ok(client, canary_url):
+        metrics.record_inconclusive(report)
+        print(
+            f"[{now()}]  ???  {site.name:<18} failed, but the canary failed too "
+            "-> prober network problem, not counted",
+            flush=True,
+        )
+        return None
+
+    metrics.record(report)
+    print(f"[{now()}]{format_report(report)}", flush=True)
+    return report
+
+
+async def site_loop(client: httpx.AsyncClient, site: Site, canary_url: str | None) -> None:
     """Probe one site forever. Every site has its own loop so they can have different intervals."""
     while True:
         started = time.monotonic()
-        report = await probe_site(client, site)
-        metrics.record(report)
-        print(f"[{now()}]{format_report(report)}", flush=True)
+        await probe_and_record(client, site, canary_url)
 
         # sleep only for the rest of the interval so we don't drift
         elapsed = time.monotonic() - started
@@ -101,9 +130,7 @@ async def run(config: Config, once: bool = False) -> None:
                 print(format_report(r))
             return
 
-        await asyncio.gather(
-            *(site_loop(client, site) for site in config.sites)
-        )
+        await asyncio.gather(*(site_loop(client, site, config.canary_url) for site in config.sites))
 
 
 def main() -> None:

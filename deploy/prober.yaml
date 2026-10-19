@@ -1,6 +1,8 @@
 # prober config used inside docker compose = prober/config.yaml + the demo app
 interval_seconds: 30
 timeout_seconds: 10
+# checked only when a site fails: if this fails too, it's our network, not the site
+canary_url: https://www.google.com/generate_204
 
 sites:
   - name: kuponradar

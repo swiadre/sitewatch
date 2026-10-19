@@ -3,9 +3,7 @@ from prometheus_client import Counter, Gauge, Histogram, start_http_server
 # buckets picked around what I see from my laptop (~0.4s - 2s)
 LATENCY_BUCKETS = (0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10)
 
-PROBE_SUCCESS = Gauge(
-    "probe_success", "1 if the last http probe of the site was ok", ["site"]
-)
+PROBE_SUCCESS = Gauge("probe_success", "1 if the last http probe of the site was ok", ["site"])
 PROBE_DURATION = Histogram(
     "probe_duration_seconds", "HTTP response time", ["site"], buckets=LATENCY_BUCKETS
 )
@@ -13,6 +11,11 @@ LAST_DURATION = Gauge(
     "probe_last_duration_seconds", "HTTP response time of the last probe", ["site"]
 )
 PROBES_TOTAL = Counter("probes_total", "Number of probes", ["site", "result"])
+INCONCLUSIVE = Counter(
+    "probes_inconclusive_total",
+    "Failed probes not counted because the canary failed too (our network, not the site)",
+    ["site"],
+)
 HTTP_STATUS = Gauge("probe_http_status_code", "Last HTTP status code (0 = no response)", ["site"])
 TLS_DAYS_LEFT = Gauge("tls_cert_days_left", "Days until the TLS certificate expires", ["site"])
 DNS_DURATION = Gauge("dns_lookup_duration_seconds", "Time of the last DNS lookup", ["site"])
@@ -30,6 +33,10 @@ def init_site(site: str) -> None:
     """
     PROBES_TOTAL.labels(site, "success")
     PROBES_TOTAL.labels(site, "failure")
+
+
+def record_inconclusive(report) -> None:
+    INCONCLUSIVE.labels(report.site.name).inc()
 
 
 def record(report) -> None:

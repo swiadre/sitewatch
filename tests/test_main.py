@@ -59,3 +59,48 @@ async def test_http_site_skips_tls():
     assert report.up
     assert report.tls.error == "skipped"
     assert report.tls.days_left is None
+
+
+def _client(handler):
+    import httpx
+
+    return httpx.AsyncClient(transport=httpx.MockTransport(handler))
+
+
+async def test_failed_canary_means_inconclusive():
+    import httpx
+    from prometheus_client import REGISTRY
+
+    from prober.config import Site
+    from prober.main import probe_and_record
+
+    def handler(req):
+        raise httpx.ConnectError("no network")  # site AND canary fail
+
+    site = Site(name="canary-test-1", url="http://localhost:1/", timeout_seconds=1)
+    async with _client(handler) as c:
+        result = await probe_and_record(c, site, canary_url="https://canary.example")
+    assert result is None
+    assert REGISTRY.get_sample_value("probes_inconclusive_total", {"site": "canary-test-1"}) == 1
+    failures = REGISTRY.get_sample_value(
+        "probes_total", {"site": "canary-test-1", "result": "failure"}
+    )
+    assert not failures  # not counted against the SLO
+
+
+async def test_site_down_canary_ok_is_a_real_failure():
+    import httpx
+
+    from prober.config import Site
+    from prober.main import probe_and_record
+
+    def handler(req):
+        if req.url.host == "canary.example":  # only the canary works
+            return httpx.Response(204)
+        return httpx.Response(503)
+
+    site = Site(name="canary-test-2", url="http://localhost:1/", timeout_seconds=1)
+    async with _client(handler) as c:
+        result = await probe_and_record(c, site, canary_url="https://canary.example")
+    assert result is not None
+    assert not result.up
