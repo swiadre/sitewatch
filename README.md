@@ -5,7 +5,7 @@ Small monitoring + SLO project I'm building to learn how Google-style SRE works 
 It probes 3 real production sites every 30 seconds (HTTP, TLS, DNS) and (later) exports
 metrics to Prometheus, computes SLOs / error budgets and tries to fix known failures by itself.
 
-**Status:** work in progress — week 1 (probes).
+**Status:** work in progress — week 2 (metrics + dashboards).
 
 ## Running locally
 

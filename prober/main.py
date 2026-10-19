@@ -5,6 +5,7 @@ from datetime import datetime
 
 import httpx
 
+from prober import metrics
 from prober.checks.dns import DnsResult, check_dns
 from prober.checks.http import HttpResult, check_http
 from prober.checks.tls import TlsResult, check_tls
@@ -70,6 +71,7 @@ async def run(config: Config, once: bool = False) -> None:
 
             print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}]")
             for r in reports:
+                metrics.record(r)
                 print(format_report(r))
 
             if once:
@@ -85,9 +87,13 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="sitewatch prober")
     parser.add_argument("--config", default=None, help="path to config.yaml")
     parser.add_argument("--once", action="store_true", help="probe once and exit")
+    parser.add_argument("--metrics-port", type=int, default=8000, help="0 = don't expose /metrics")
     args = parser.parse_args()
 
     config = load_config(args.config) if args.config else load_config()
+    if args.metrics_port and not args.once:
+        metrics.start_metrics_server(args.metrics_port)
+        print(f"metrics on http://localhost:{args.metrics_port}/metrics")
     try:
         asyncio.run(run(config, once=args.once))
     except KeyboardInterrupt:
