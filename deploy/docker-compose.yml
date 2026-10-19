@@ -2,6 +2,8 @@ name: sitewatch
 
 services:
   prober:
+    # CI pushes this image, locally `docker compose up --build` builds it
+    image: ghcr.io/swiadre/sitewatch-prober:${IMAGE_TAG:-latest}
     build: ..
     restart: unless-stopped
     command: ["python", "-u", "-m", "prober", "--metrics-port", "8000", "--config", "/etc/sitewatch/prober.yaml"]
@@ -34,6 +36,7 @@ services:
       - "9093:9093"
 
   remediator:
+    image: ghcr.io/swiadre/sitewatch-remediator:${IMAGE_TAG:-latest}
     build:
       context: ..
       dockerfile: remediation/Dockerfile

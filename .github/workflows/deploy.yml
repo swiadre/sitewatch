@@ -1,0 +1,76 @@
+name: Build & deploy
+
+# runs after CI passed on main
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write # for GCP workload identity federation (no json keys in secrets)
+
+jobs:
+  build:
+    if: github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - image: prober
+            dockerfile: Dockerfile
+          - image: remediator
+            dockerfile: remediation/Dockerfile
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # workflow_run checks out the default branch by default, build the commit CI tested
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ${{ matrix.dockerfile }}
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/sitewatch-${{ matrix.image }}:latest
+            ghcr.io/${{ github.repository_owner }}/sitewatch-${{ matrix.image }}:${{ github.event.workflow_run.head_sha || github.sha }}
+
+  deploy:
+    needs: build
+    # turned off until the GCP project exists: set repo variable DEPLOY_ENABLED=true
+    if: vars.DEPLOY_ENABLED == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ vars.GCP_WIF_PROVIDER }}
+          service_account: ${{ vars.GCP_DEPLOY_SA }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Pull new images + restart on the main VM
+        env:
+          TAG: ${{ github.event.workflow_run.head_sha || github.sha }}
+        run: |
+          gcloud compute ssh sitewatch-main \
+            --zone europe-central2-a --tunnel-through-iap --quiet \
+            --command "cd /opt/sitewatch && sudo git pull --ff-only && cd deploy \
+              && sudo IMAGE_TAG=$TAG docker compose pull prober remediator \
+              && sudo IMAGE_TAG=$TAG docker compose up -d"
+
+      - name: Smoke test
+        run: |
+          gcloud compute ssh sitewatch-main \
+            --zone europe-central2-a --tunnel-through-iap --quiet \
+            --command "sleep 20 && curl -fsS localhost:8000/metrics | grep -q probe_success && echo OK"
