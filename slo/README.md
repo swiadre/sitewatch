@@ -91,6 +91,9 @@ to write by hand), and tested with `promtool test rules`
 3. constant 0.5% errors (5× burn) → ticket but no page
 4. prober down → page
 5. cert with 10 days left → ticket
+6. one region fails, the others don't → "network problem" ticket, not a page
+7. all regions fail → page
+8. gap in the data + 1 failure → no page (regression test for the postmortem)
 
 ```bash
 python -m slo.rules > deploy/prometheus/rules/slo.rules.yml   # after changing slos.yaml
@@ -104,9 +107,14 @@ only uses the 6h/30m (6×) window.
 
 ## Known limitations
 
-- **Little history = noisy long windows.** Right after Prometheus starts, the "6h" window
-  has maybe an hour of data, so a single failure looks much worse than it is. I hit this in
-  the promtool tests: one failed probe paged with 75 min of history but not with 3 days.
+- **Little history = noisy long windows.** Right after Prometheus starts (or after a gap in
+  the data), the "6h" window has maybe an hour of data, so a single failure looks much worse
+  than it is. I hit this in the promtool tests first and ignored it, and then it caused a real
+  false page ([postmortem](../postmortems/2026-10-19-false-page-after-laptop-wake.md)).
+  **Fixed:** every burn-rate condition now also needs at least `min_data_fraction` (50%) of
+  the expected probes in its long window (`slo:sli_events:increase<window>` recording rules).
+  Downside: no alerts during the first 30 min after a fresh start, and no slow-burn tickets
+  until there are 1.5 days of data.
 - **One vantage point.** All probes come from one place. If my network breaks, every site
   looks down. Probing from 2-3 regions is planned (week 6).
 - **Probe resolution.** One probe every 30 s, so a 10-second outage can be missed completely,

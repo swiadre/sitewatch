@@ -14,6 +14,11 @@ Google-style SRE works in practice (SLIs/SLOs, error budgets, burn-rate alerts, 
 
 ![dashboard](docs/dashboard.png)
 
+<sub>First ~4 hours of data, from my laptop. Gaps = laptop asleep, red stripes on "demo" = chaos
+tests. The negative error budget for 2 sites is from **one** failed probe right after the laptop
+woke up, counted against only 4 hours of data. It also caused a false page, see the
+[postmortem](postmortems/2026-10-19-false-page-after-laptop-wake.md).</sub>
+
 ## Results
 
 Chaos tests on the demo app: 5 failure scenarios × 10 runs each, **with auto-remediation**
@@ -144,7 +149,8 @@ to GHCR. The deploy step to GCP is ready but switched off until the GCP project 
 - the remediator talks to the Docker socket, which is root on the host. Fine on my own
   machine, but in a real setup it'd be a k8s operator with narrow RBAC instead
 - SLO windows need weeks of data to be meaningful. In the first hours a single failure looks
-  much bigger than it is ([more](slo/README.md#known-limitations))
+  much bigger than it is. This caused a real false page, now prevented by a minimum-data
+  guard ([postmortem](postmortems/2026-10-19-false-page-after-laptop-wake.md))
 - **at 1000 sites instead of 3:** generated rules per site would explode (that's ~24 rules
   per site). I'd switch to one set of rules with `by (site)` and the objective as a recording
   rule joined in. Probers would be sharded by site hash, and Prometheus would need
