@@ -35,14 +35,20 @@ async def with_timeout(coro, timeout: float, fail_result):
         return fail_result
 
 
+async def skipped_tls() -> TlsResult:
+    return TlsResult(ok=True, error="skipped")
+
+
 async def probe_site(client: httpx.AsyncClient, site: Site, timeout: float) -> SiteReport:
+    # plain http sites (like the local demo app) have no certificate to check
+    tls_check = check_tls(site.hostname) if site.is_https else skipped_tls()
     http, tls, dns = await asyncio.gather(
         with_timeout(
             check_http(client, site.url, site.expected_text),
             timeout,
             HttpResult(ok=False, error="Timeout"),
         ),
-        with_timeout(check_tls(site.hostname), timeout, TlsResult(ok=False, error="Timeout")),
+        with_timeout(tls_check, timeout, TlsResult(ok=False, error="Timeout")),
         with_timeout(check_dns(site.hostname), timeout, DnsResult(ok=False, error="Timeout")),
     )
     return SiteReport(site=site, http=http, tls=tls, dns=dns)
@@ -66,25 +72,37 @@ def format_report(r: SiteReport) -> str:
     return line
 
 
+def now() -> str:
+    return f"{datetime.now():%Y-%m-%d %H:%M:%S}"
+
+
+async def site_loop(client: httpx.AsyncClient, site: Site, timeout: float) -> None:
+    """Probe one site forever. Every site has its own loop so they can have different intervals."""
+    while True:
+        started = time.monotonic()
+        report = await probe_site(client, site, timeout)
+        metrics.record(report)
+        print(f"[{now()}]{format_report(report)}", flush=True)
+
+        # sleep only for the rest of the interval so we don't drift
+        elapsed = time.monotonic() - started
+        await asyncio.sleep(max(0, site.interval_seconds - elapsed))
+
+
 async def run(config: Config, once: bool = False) -> None:
     for site in config.sites:
         metrics.init_site(site.name)
 
     async with httpx.AsyncClient(timeout=config.timeout_seconds) as client:
-        while True:
-            started = time.monotonic()
-            reports = await probe_all(client, config)
-
-            print(f"[{datetime.now():%Y-%m-%d %H:%M:%S}]")
-            for r in reports:
-                metrics.record(r)
+        if once:
+            print(f"[{now()}]")
+            for r in await probe_all(client, config):
                 print(format_report(r))
+            return
 
-            if once:
-                return
-            # sleep only for the rest of the interval so we don't drift
-            elapsed = time.monotonic() - started
-            await asyncio.sleep(max(0, config.interval_seconds - elapsed))
+        await asyncio.gather(
+            *(site_loop(client, site, config.timeout_seconds) for site in config.sites)
+        )
 
 
 def main() -> None:

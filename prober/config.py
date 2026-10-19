@@ -12,10 +12,16 @@ class Site:
     name: str
     url: str
     expected_text: str | None = None
+    # per-site override, if not set the global interval is used
+    interval_seconds: float | None = None
 
     @property
     def hostname(self) -> str:
         return urlparse(self.url).hostname or ""
+
+    @property
+    def is_https(self) -> bool:
+        return urlparse(self.url).scheme == "https"
 
 
 @dataclass
@@ -33,8 +39,12 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
     if not sites:
         raise ValueError(f"no sites defined in {path}")
 
-    return Config(
+    config = Config(
         interval_seconds=raw.get("interval_seconds", 30),
         timeout_seconds=raw.get("timeout_seconds", 10),
         sites=sites,
     )
+    for site in config.sites:
+        if site.interval_seconds is None:
+            site.interval_seconds = config.interval_seconds
+    return config

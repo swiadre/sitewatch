@@ -39,7 +39,7 @@ def record(report) -> None:
 
     if report.http.duration_ms is not None:
         PROBE_DURATION.labels(site).observe(report.http.duration_ms / 1000)
-    if report.tls.days_left is not None:
+    if report.tls.days_left is not None:  # None also for http-only sites
         TLS_DAYS_LEFT.labels(site).set(report.tls.days_left)
     if report.dns.duration_ms is not None:
         DNS_DURATION.labels(site).set(report.dns.duration_ms / 1000)

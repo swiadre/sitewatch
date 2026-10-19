@@ -43,3 +43,19 @@ def test_tls_warning_does_not_mean_down():
         dns=DnsResult(ok=False, error="Timeout"),
     )
     assert r.up
+
+
+async def test_http_site_skips_tls():
+    import httpx
+
+    from prober.config import Site
+    from prober.main import probe_site
+
+    def handler(req):
+        return httpx.Response(200, text="demo")
+
+    async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as client:
+        report = await probe_site(client, Site(name="d", url="http://localhost:1/"), timeout=2)
+    assert report.up
+    assert report.tls.error == "skipped"
+    assert report.tls.days_left is None
