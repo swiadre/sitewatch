@@ -66,6 +66,26 @@ groups:
     labels:
       site: kuponradar
       slo: availability
+  - record: slo:sli_events:increase1h
+    expr: sum(increase(probes_total{site="kuponradar"}[1h]))
+    labels:
+      site: kuponradar
+      slo: availability
+  - record: slo:sli_events:increase6h
+    expr: sum(increase(probes_total{site="kuponradar"}[6h]))
+    labels:
+      site: kuponradar
+      slo: availability
+  - record: slo:sli_events:increase1d
+    expr: sum(increase(probes_total{site="kuponradar"}[1d]))
+    labels:
+      site: kuponradar
+      slo: availability
+  - record: slo:sli_events:increase3d
+    expr: sum(increase(probes_total{site="kuponradar"}[3d]))
+    labels:
+      site: kuponradar
+      slo: availability
   - record: slo:objective:ratio
     expr: vector(0.999)
     labels:
@@ -79,10 +99,12 @@ groups:
   - alert: ErrorBudgetBurnFast
     expr: |-
       (slo:sli_error:ratio_rate1h{site="kuponradar",slo="availability"} > 0.0144
-       and slo:sli_error:ratio_rate5m{site="kuponradar",slo="availability"} > 0.0144)
+       and slo:sli_error:ratio_rate5m{site="kuponradar",slo="availability"} > 0.0144
+       and slo:sli_events:increase1h{site="kuponradar",slo="availability"} >= 60)
       or
       (slo:sli_error:ratio_rate6h{site="kuponradar",slo="availability"} > 0.006
-       and slo:sli_error:ratio_rate30m{site="kuponradar",slo="availability"} > 0.006)
+       and slo:sli_error:ratio_rate30m{site="kuponradar",slo="availability"} > 0.006
+       and slo:sli_events:increase6h{site="kuponradar",slo="availability"} >= 360)
     for: 2m
     labels:
       severity: page
@@ -94,10 +116,12 @@ groups:
   - alert: ErrorBudgetBurnSlow
     expr: |-
       (slo:sli_error:ratio_rate1d{site="kuponradar",slo="availability"} > 0.003
-       and slo:sli_error:ratio_rate2h{site="kuponradar",slo="availability"} > 0.003)
+       and slo:sli_error:ratio_rate2h{site="kuponradar",slo="availability"} > 0.003
+       and slo:sli_events:increase1d{site="kuponradar",slo="availability"} >= 1440)
       or
       (slo:sli_error:ratio_rate3d{site="kuponradar",slo="availability"} > 0.001
-       and slo:sli_error:ratio_rate6h{site="kuponradar",slo="availability"} > 0.001)
+       and slo:sli_error:ratio_rate6h{site="kuponradar",slo="availability"} > 0.001
+       and slo:sli_events:increase3d{site="kuponradar",slo="availability"} >= 4320)
     for: 15m
     labels:
       severity: ticket
@@ -188,6 +212,26 @@ groups:
     labels:
       site: kuponradar
       slo: latency
+  - record: slo:sli_events:increase1h
+    expr: sum(increase(probe_duration_seconds_count{site="kuponradar"}[1h]))
+    labels:
+      site: kuponradar
+      slo: latency
+  - record: slo:sli_events:increase6h
+    expr: sum(increase(probe_duration_seconds_count{site="kuponradar"}[6h]))
+    labels:
+      site: kuponradar
+      slo: latency
+  - record: slo:sli_events:increase1d
+    expr: sum(increase(probe_duration_seconds_count{site="kuponradar"}[1d]))
+    labels:
+      site: kuponradar
+      slo: latency
+  - record: slo:sli_events:increase3d
+    expr: sum(increase(probe_duration_seconds_count{site="kuponradar"}[3d]))
+    labels:
+      site: kuponradar
+      slo: latency
   - record: slo:objective:ratio
     expr: vector(0.9)
     labels:
@@ -201,7 +245,8 @@ groups:
   - alert: ErrorBudgetBurnFast
     expr: |-
       (slo:sli_error:ratio_rate6h{site="kuponradar",slo="latency"} > 0.6
-       and slo:sli_error:ratio_rate30m{site="kuponradar",slo="latency"} > 0.6)
+       and slo:sli_error:ratio_rate30m{site="kuponradar",slo="latency"} > 0.6
+       and slo:sli_events:increase6h{site="kuponradar",slo="latency"} >= 360)
     for: 2m
     labels:
       severity: page
@@ -213,10 +258,12 @@ groups:
   - alert: ErrorBudgetBurnSlow
     expr: |-
       (slo:sli_error:ratio_rate1d{site="kuponradar",slo="latency"} > 0.3
-       and slo:sli_error:ratio_rate2h{site="kuponradar",slo="latency"} > 0.3)
+       and slo:sli_error:ratio_rate2h{site="kuponradar",slo="latency"} > 0.3
+       and slo:sli_events:increase1d{site="kuponradar",slo="latency"} >= 1440)
       or
       (slo:sli_error:ratio_rate3d{site="kuponradar",slo="latency"} > 0.1
-       and slo:sli_error:ratio_rate6h{site="kuponradar",slo="latency"} > 0.1)
+       and slo:sli_error:ratio_rate6h{site="kuponradar",slo="latency"} > 0.1
+       and slo:sli_events:increase3d{site="kuponradar",slo="latency"} >= 4320)
     for: 15m
     labels:
       severity: ticket
@@ -291,6 +338,26 @@ groups:
     labels:
       site: taxnieruchomosci
       slo: availability
+  - record: slo:sli_events:increase1h
+    expr: sum(increase(probes_total{site="taxnieruchomosci"}[1h]))
+    labels:
+      site: taxnieruchomosci
+      slo: availability
+  - record: slo:sli_events:increase6h
+    expr: sum(increase(probes_total{site="taxnieruchomosci"}[6h]))
+    labels:
+      site: taxnieruchomosci
+      slo: availability
+  - record: slo:sli_events:increase1d
+    expr: sum(increase(probes_total{site="taxnieruchomosci"}[1d]))
+    labels:
+      site: taxnieruchomosci
+      slo: availability
+  - record: slo:sli_events:increase3d
+    expr: sum(increase(probes_total{site="taxnieruchomosci"}[3d]))
+    labels:
+      site: taxnieruchomosci
+      slo: availability
   - record: slo:objective:ratio
     expr: vector(0.999)
     labels:
@@ -304,10 +371,12 @@ groups:
   - alert: ErrorBudgetBurnFast
     expr: |-
       (slo:sli_error:ratio_rate1h{site="taxnieruchomosci",slo="availability"} > 0.0144
-       and slo:sli_error:ratio_rate5m{site="taxnieruchomosci",slo="availability"} > 0.0144)
+       and slo:sli_error:ratio_rate5m{site="taxnieruchomosci",slo="availability"} > 0.0144
+       and slo:sli_events:increase1h{site="taxnieruchomosci",slo="availability"} >= 60)
       or
       (slo:sli_error:ratio_rate6h{site="taxnieruchomosci",slo="availability"} > 0.006
-       and slo:sli_error:ratio_rate30m{site="taxnieruchomosci",slo="availability"} > 0.006)
+       and slo:sli_error:ratio_rate30m{site="taxnieruchomosci",slo="availability"} > 0.006
+       and slo:sli_events:increase6h{site="taxnieruchomosci",slo="availability"} >= 360)
     for: 2m
     labels:
       severity: page
@@ -319,10 +388,12 @@ groups:
   - alert: ErrorBudgetBurnSlow
     expr: |-
       (slo:sli_error:ratio_rate1d{site="taxnieruchomosci",slo="availability"} > 0.003
-       and slo:sli_error:ratio_rate2h{site="taxnieruchomosci",slo="availability"} > 0.003)
+       and slo:sli_error:ratio_rate2h{site="taxnieruchomosci",slo="availability"} > 0.003
+       and slo:sli_events:increase1d{site="taxnieruchomosci",slo="availability"} >= 1440)
       or
       (slo:sli_error:ratio_rate3d{site="taxnieruchomosci",slo="availability"} > 0.001
-       and slo:sli_error:ratio_rate6h{site="taxnieruchomosci",slo="availability"} > 0.001)
+       and slo:sli_error:ratio_rate6h{site="taxnieruchomosci",slo="availability"} > 0.001
+       and slo:sli_events:increase3d{site="taxnieruchomosci",slo="availability"} >= 4320)
     for: 15m
     labels:
       severity: ticket
@@ -413,6 +484,26 @@ groups:
     labels:
       site: taxnieruchomosci
       slo: latency
+  - record: slo:sli_events:increase1h
+    expr: sum(increase(probe_duration_seconds_count{site="taxnieruchomosci"}[1h]))
+    labels:
+      site: taxnieruchomosci
+      slo: latency
+  - record: slo:sli_events:increase6h
+    expr: sum(increase(probe_duration_seconds_count{site="taxnieruchomosci"}[6h]))
+    labels:
+      site: taxnieruchomosci
+      slo: latency
+  - record: slo:sli_events:increase1d
+    expr: sum(increase(probe_duration_seconds_count{site="taxnieruchomosci"}[1d]))
+    labels:
+      site: taxnieruchomosci
+      slo: latency
+  - record: slo:sli_events:increase3d
+    expr: sum(increase(probe_duration_seconds_count{site="taxnieruchomosci"}[3d]))
+    labels:
+      site: taxnieruchomosci
+      slo: latency
   - record: slo:objective:ratio
     expr: vector(0.9)
     labels:
@@ -426,7 +517,8 @@ groups:
   - alert: ErrorBudgetBurnFast
     expr: |-
       (slo:sli_error:ratio_rate6h{site="taxnieruchomosci",slo="latency"} > 0.6
-       and slo:sli_error:ratio_rate30m{site="taxnieruchomosci",slo="latency"} > 0.6)
+       and slo:sli_error:ratio_rate30m{site="taxnieruchomosci",slo="latency"} > 0.6
+       and slo:sli_events:increase6h{site="taxnieruchomosci",slo="latency"} >= 360)
     for: 2m
     labels:
       severity: page
@@ -438,10 +530,12 @@ groups:
   - alert: ErrorBudgetBurnSlow
     expr: |-
       (slo:sli_error:ratio_rate1d{site="taxnieruchomosci",slo="latency"} > 0.3
-       and slo:sli_error:ratio_rate2h{site="taxnieruchomosci",slo="latency"} > 0.3)
+       and slo:sli_error:ratio_rate2h{site="taxnieruchomosci",slo="latency"} > 0.3
+       and slo:sli_events:increase1d{site="taxnieruchomosci",slo="latency"} >= 1440)
       or
       (slo:sli_error:ratio_rate3d{site="taxnieruchomosci",slo="latency"} > 0.1
-       and slo:sli_error:ratio_rate6h{site="taxnieruchomosci",slo="latency"} > 0.1)
+       and slo:sli_error:ratio_rate6h{site="taxnieruchomosci",slo="latency"} > 0.1
+       and slo:sli_events:increase3d{site="taxnieruchomosci",slo="latency"} >= 4320)
     for: 15m
     labels:
       severity: ticket
@@ -516,6 +610,26 @@ groups:
     labels:
       site: alstrategika
       slo: availability
+  - record: slo:sli_events:increase1h
+    expr: sum(increase(probes_total{site="alstrategika"}[1h]))
+    labels:
+      site: alstrategika
+      slo: availability
+  - record: slo:sli_events:increase6h
+    expr: sum(increase(probes_total{site="alstrategika"}[6h]))
+    labels:
+      site: alstrategika
+      slo: availability
+  - record: slo:sli_events:increase1d
+    expr: sum(increase(probes_total{site="alstrategika"}[1d]))
+    labels:
+      site: alstrategika
+      slo: availability
+  - record: slo:sli_events:increase3d
+    expr: sum(increase(probes_total{site="alstrategika"}[3d]))
+    labels:
+      site: alstrategika
+      slo: availability
   - record: slo:objective:ratio
     expr: vector(0.999)
     labels:
@@ -529,10 +643,12 @@ groups:
   - alert: ErrorBudgetBurnFast
     expr: |-
       (slo:sli_error:ratio_rate1h{site="alstrategika",slo="availability"} > 0.0144
-       and slo:sli_error:ratio_rate5m{site="alstrategika",slo="availability"} > 0.0144)
+       and slo:sli_error:ratio_rate5m{site="alstrategika",slo="availability"} > 0.0144
+       and slo:sli_events:increase1h{site="alstrategika",slo="availability"} >= 60)
       or
       (slo:sli_error:ratio_rate6h{site="alstrategika",slo="availability"} > 0.006
-       and slo:sli_error:ratio_rate30m{site="alstrategika",slo="availability"} > 0.006)
+       and slo:sli_error:ratio_rate30m{site="alstrategika",slo="availability"} > 0.006
+       and slo:sli_events:increase6h{site="alstrategika",slo="availability"} >= 360)
     for: 2m
     labels:
       severity: page
@@ -544,10 +660,12 @@ groups:
   - alert: ErrorBudgetBurnSlow
     expr: |-
       (slo:sli_error:ratio_rate1d{site="alstrategika",slo="availability"} > 0.003
-       and slo:sli_error:ratio_rate2h{site="alstrategika",slo="availability"} > 0.003)
+       and slo:sli_error:ratio_rate2h{site="alstrategika",slo="availability"} > 0.003
+       and slo:sli_events:increase1d{site="alstrategika",slo="availability"} >= 1440)
       or
       (slo:sli_error:ratio_rate3d{site="alstrategika",slo="availability"} > 0.001
-       and slo:sli_error:ratio_rate6h{site="alstrategika",slo="availability"} > 0.001)
+       and slo:sli_error:ratio_rate6h{site="alstrategika",slo="availability"} > 0.001
+       and slo:sli_events:increase3d{site="alstrategika",slo="availability"} >= 4320)
     for: 15m
     labels:
       severity: ticket
@@ -638,6 +756,26 @@ groups:
     labels:
       site: alstrategika
       slo: latency
+  - record: slo:sli_events:increase1h
+    expr: sum(increase(probe_duration_seconds_count{site="alstrategika"}[1h]))
+    labels:
+      site: alstrategika
+      slo: latency
+  - record: slo:sli_events:increase6h
+    expr: sum(increase(probe_duration_seconds_count{site="alstrategika"}[6h]))
+    labels:
+      site: alstrategika
+      slo: latency
+  - record: slo:sli_events:increase1d
+    expr: sum(increase(probe_duration_seconds_count{site="alstrategika"}[1d]))
+    labels:
+      site: alstrategika
+      slo: latency
+  - record: slo:sli_events:increase3d
+    expr: sum(increase(probe_duration_seconds_count{site="alstrategika"}[3d]))
+    labels:
+      site: alstrategika
+      slo: latency
   - record: slo:objective:ratio
     expr: vector(0.9)
     labels:
@@ -651,7 +789,8 @@ groups:
   - alert: ErrorBudgetBurnFast
     expr: |-
       (slo:sli_error:ratio_rate6h{site="alstrategika",slo="latency"} > 0.6
-       and slo:sli_error:ratio_rate30m{site="alstrategika",slo="latency"} > 0.6)
+       and slo:sli_error:ratio_rate30m{site="alstrategika",slo="latency"} > 0.6
+       and slo:sli_events:increase6h{site="alstrategika",slo="latency"} >= 360)
     for: 2m
     labels:
       severity: page
@@ -663,10 +802,12 @@ groups:
   - alert: ErrorBudgetBurnSlow
     expr: |-
       (slo:sli_error:ratio_rate1d{site="alstrategika",slo="latency"} > 0.3
-       and slo:sli_error:ratio_rate2h{site="alstrategika",slo="latency"} > 0.3)
+       and slo:sli_error:ratio_rate2h{site="alstrategika",slo="latency"} > 0.3
+       and slo:sli_events:increase1d{site="alstrategika",slo="latency"} >= 1440)
       or
       (slo:sli_error:ratio_rate3d{site="alstrategika",slo="latency"} > 0.1
-       and slo:sli_error:ratio_rate6h{site="alstrategika",slo="latency"} > 0.1)
+       and slo:sli_error:ratio_rate6h{site="alstrategika",slo="latency"} > 0.1
+       and slo:sli_events:increase3d{site="alstrategika",slo="latency"} >= 4320)
     for: 15m
     labels:
       severity: ticket

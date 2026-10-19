@@ -1,6 +1,11 @@
 # SLOs for every site. why these numbers -> see slo/README.md
 window_days: 30
 
+# used to check that a window has enough data before alerting:
+# a burn rate alert needs at least min_data_fraction of the expected probes in its long window
+probe_interval_seconds: 30
+min_data_fraction: 0.5
+
 defaults:
   availability:
     objective: 0.999          # 99.9% of probes return 2xx/3xx with expected text

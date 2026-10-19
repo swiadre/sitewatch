@@ -50,16 +50,16 @@ tests:
               summary: "kuponradar: availability SLO is burning error budget too fast"
               description: "error ratio 16.67%, objective 99.900%"
 
-  # 3) small but constant error rate (1 failed probe every 200 min = 0.5%)
-  #    burns budget 5x faster than allowed -> ticket, but not a page
-  - interval: 1m
+  # 3) small but constant error rate (1 failed probe every 200 = 0.5%)
+  #    burns budget 5x faster than allowed -> ticket, but not a page (page needs 6x)
+  - interval: 30s
     input_series:
       - series: 'probes_total{site="kuponradar",result="success"}'
-        values: '0+1x2300'
+        values: '0+1x3300'
       - series: 'probes_total{site="kuponradar",result="failure"}'
-        values: '0x199 1x199 2x199 3x199 4x199 5x199 6x199 7x199 8x199 9x199 10x199 11x199'
+        values: '0x199 1x199 2x199 3x199 4x199 5x199 6x199 7x199 8x199 9x199 10x199 11x199 12x199 13x199 14x199 15x199 16x199'
       - series: 'up{job="sitewatch-prober"}'
-        values: '1x2300'
+        values: '1x3300'
     alert_rule_test:
       - eval_time: 1560m
         alertname: ErrorBudgetBurnFast
@@ -73,7 +73,7 @@ tests:
               slo: availability
             exp_annotations:
               summary: "kuponradar: availability SLO is burning error budget too fast"
-              description: "error ratio 0.4467%, objective 99.900%"
+              description: "error ratio 0.4838%, objective 99.900%"
 
   # 4) prober itself is dead
   - interval: 30s
@@ -144,4 +144,21 @@ tests:
               summary: "kuponradar is down from every region"
       - eval_time: 5m
         alertname: SiteUnreachableFromOneRegion
+        exp_alerts: []
+
+  # 8) regression test for postmortems/2026-10-19-false-page-after-laptop-wake.md
+  #    50 min gap in the data (laptop asleep), then 1 failed probe right after wake.
+  #    the 1h window only has ~30 probes, so 1 failure = 3% error rate = 23x burn rate.
+  #    before the min-data guard this paged. now it must not
+  - interval: 30s
+    input_series:
+      - series: 'probes_total{site="kuponradar",result="success"}'
+        values: '0+1x20 _x100 21+1x8 29x2 30+1x10'
+      - series: 'probes_total{site="kuponradar",result="failure"}'
+        values: '0x20 _x100 0x8 1x13'
+      - series: 'up{job="sitewatch-prober"}'
+        values: '1x20 _x100 1x21'
+    alert_rule_test:
+      - eval_time: 70m
+        alertname: ErrorBudgetBurnFast
         exp_alerts: []

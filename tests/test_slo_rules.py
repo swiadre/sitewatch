@@ -45,3 +45,18 @@ def test_generated_file_is_up_to_date(capsys):
     committed = (REPO / "deploy/prometheus/rules/slo.rules.yml").read_text()
     assert generated == committed
     assert yaml.safe_load(generated)["groups"]
+
+
+def test_min_events_guard():
+    slo = {
+        "site": "x",
+        "slo": "availability",
+        "objective": 0.999,
+        "probe_interval_seconds": 30,
+        "min_data_fraction": 0.5,
+    }
+    # 1h at one probe every 30s = 120 probes, need at least half
+    assert rules.min_events(slo, "1h") == 60
+    fast = [a for a in rules.alert_rules(slo) if a["alert"] == "ErrorBudgetBurnFast"][0]
+    assert "slo:sli_events:increase1h" in fast["expr"]
+    assert ">= 60" in fast["expr"]
