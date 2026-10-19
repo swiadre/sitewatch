@@ -1,0 +1,14 @@
+# SLOs for every site. why these numbers -> see slo/README.md
+window_days: 30
+
+defaults:
+  availability:
+    objective: 0.999          # 99.9% of probes return 2xx/3xx with expected text
+  latency:
+    objective: 0.90           # 90% of responses ...
+    threshold_seconds: 1.5    # ... faster than 1.5s (must be a histogram bucket!)
+
+sites:
+  kuponradar: {}
+  taxnieruchomosci: {}
+  alstrategika: {}
