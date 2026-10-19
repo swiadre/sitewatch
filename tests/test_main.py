@@ -28,3 +28,18 @@ def test_format_report_down():
     line = format_report(r)
     assert "DOWN" in line
     assert "ConnectError" in line
+
+
+def test_tls_warning_does_not_mean_down():
+    from prober.checks.dns import DnsResult
+    from prober.checks.tls import TlsResult
+    from prober.config import Site
+    from prober.main import SiteReport
+
+    r = SiteReport(
+        site=Site(name="test", url="https://example.com"),
+        http=HttpResult(ok=True, status_code=200, duration_ms=300),
+        tls=TlsResult(ok=False, days_left=5),
+        dns=DnsResult(ok=False, error="Timeout"),
+    )
+    assert r.up

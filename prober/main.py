@@ -21,7 +21,10 @@ class SiteReport:
 
     @property
     def up(self) -> bool:
-        return self.http.ok and self.tls.ok and self.dns.ok
+        # "up" = what a user sees, so only the http check counts here.
+        # a cert expiring in 10 days or a slow separate dns lookup is not downtime,
+        # those get their own alerts instead
+        return self.http.ok
 
 
 async def with_timeout(coro, timeout: float, fail_result):

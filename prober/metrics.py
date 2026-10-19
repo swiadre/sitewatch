@@ -4,7 +4,7 @@ from prometheus_client import Counter, Gauge, Histogram, start_http_server
 LATENCY_BUCKETS = (0.1, 0.25, 0.5, 0.75, 1, 1.5, 2, 3, 5, 10)
 
 PROBE_SUCCESS = Gauge(
-    "probe_success", "1 if the last probe of the site was fully ok (http+tls+dns)", ["site"]
+    "probe_success", "1 if the last http probe of the site was ok", ["site"]
 )
 PROBE_DURATION = Histogram(
     "probe_duration_seconds", "HTTP response time", ["site"], buckets=LATENCY_BUCKETS
