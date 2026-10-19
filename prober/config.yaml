@@ -1,0 +1,17 @@
+# how often we probe every site (seconds)
+interval_seconds: 30
+# max time for a single check before we treat it as failed
+timeout_seconds: 10
+
+sites:
+  - name: kuponradar
+    url: https://kuponradar.pl
+    expected_text: KuponRadar
+
+  - name: taxnieruchomosci
+    url: https://taxnieruchomosci.pl
+    expected_text: Tax Nieruchomości
+
+  - name: alstrategika
+    url: https://www.alstrategika.com
+    expected_text: Aleksandra
