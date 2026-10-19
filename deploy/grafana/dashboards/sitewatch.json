@@ -58,7 +58,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "probe_success{site=~\"$site\"}",
+          "expr": "min by (site) (probe_success{site=~\"$site\"})",
           "legendFormat": "{{site}}",
           "refId": "A"
         }
@@ -129,7 +129,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "avg_over_time(probe_success{site=~\"$site\"}[$__range]) * 100",
+          "expr": "avg by (site) (avg_over_time(probe_success{site=~\"$site\"}[$__range])) * 100",
           "legendFormat": "{{site}}",
           "refId": "A"
         }
@@ -191,7 +191,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "tls_cert_days_left{site=~\"$site\"}",
+          "expr": "min by (site) (tls_cert_days_left{site=~\"$site\"})",
           "legendFormat": "{{site}}",
           "refId": "A"
         }
@@ -255,7 +255,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "probe_success{site=~\"$site\"}",
+          "expr": "min by (site) (probe_success{site=~\"$site\"})",
           "legendFormat": "{{site}}",
           "refId": "A"
         }
@@ -420,7 +420,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "dns_lookup_duration_seconds{site=~\"$site\"}",
+          "expr": "max by (site) (dns_lookup_duration_seconds{site=~\"$site\"})",
           "legendFormat": "{{site}}",
           "refId": "A"
         }
@@ -453,7 +453,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "probe_http_status_code{site=~\"$site\"}",
+          "expr": "max by (site) (probe_http_status_code{site=~\"$site\"})",
           "legendFormat": "{{site}}",
           "refId": "A"
         }
