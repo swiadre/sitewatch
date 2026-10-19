@@ -104,3 +104,44 @@ tests:
               site: kuponradar
             exp_annotations:
               summary: "kuponradar: TLS certificate expires in 10 days"
+
+  # 6) one region can't reach the site, the other can -> network problem ticket
+  - interval: 30s
+    input_series:
+      - series: 'probe_success{site="kuponradar",region="main"}'
+        values: '1x20'
+      - series: 'probe_success{site="kuponradar",region="us-central1"}'
+        values: '0x20'
+    alert_rule_test:
+      - eval_time: 8m
+        alertname: SiteUnreachableFromOneRegion
+        exp_alerts:
+          - exp_labels:
+              severity: ticket
+              site: kuponradar
+              region: us-central1
+            exp_annotations:
+              summary: "kuponradar fails only from us-central1, other regions are fine - network problem?"
+      - eval_time: 8m
+        alertname: SiteDownFromAllRegions
+        exp_alerts: []
+
+  # 7) all regions fail -> real outage, page
+  - interval: 30s
+    input_series:
+      - series: 'probe_success{site="kuponradar",region="main"}'
+        values: '0x20'
+      - series: 'probe_success{site="kuponradar",region="us-central1"}'
+        values: '0x20'
+    alert_rule_test:
+      - eval_time: 5m
+        alertname: SiteDownFromAllRegions
+        exp_alerts:
+          - exp_labels:
+              severity: page
+              site: kuponradar
+            exp_annotations:
+              summary: "kuponradar is down from every region"
+      - eval_time: 5m
+        alertname: SiteUnreachableFromOneRegion
+        exp_alerts: []

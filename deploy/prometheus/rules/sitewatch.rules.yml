@@ -26,3 +26,28 @@ groups:
           severity: page
         annotations:
           summary: "{{ $labels.site }}: TLS certificate expires in {{ $value | printf \"%.1f\" }} days!"
+
+  # with probers in more than one region (terraform/), compare them:
+  # one region fails but others are fine -> probably the network between that region and
+  # the site, not the site itself. ticket, not a page
+  - name: multi-region
+    rules:
+      - alert: SiteUnreachableFromOneRegion
+        expr: |
+          min by (site, region) (probe_success{site!="demo"}) == 0
+          and on(site) (max by (site) (probe_success{site!="demo"}) == 1)
+        for: 5m
+        labels:
+          severity: ticket
+        annotations:
+          summary: "{{ $labels.site }} fails only from {{ $labels.region }}, other regions are fine - network problem?"
+
+      - alert: SiteDownFromAllRegions
+        expr: |
+          max by (site) (probe_success{site!="demo"}) == 0
+          and on(site) (count by (site) (probe_success{site!="demo"}) > 1)
+        for: 2m
+        labels:
+          severity: page
+        annotations:
+          summary: "{{ $labels.site }} is down from every region"
