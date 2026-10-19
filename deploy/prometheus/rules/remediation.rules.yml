@@ -1,0 +1,36 @@
+# alerts for the demo app that have an automatic fix.
+# the `remediation` label tells the remediator what to do.
+groups:
+  - name: remediation
+    rules:
+      # no http response at all (connection refused / timeout) = container dead or hung
+      - alert: DemoUnresponsive
+        expr: probe_success{site="demo"} == 0 and probe_http_status_code{site="demo"} == 0
+        for: 10s
+        labels:
+          severity: page
+          remediation: restart
+        annotations:
+          summary: demo app doesn't respond at all, restarting the container
+
+      # 5xx in the first 15 min after a deploy -> most likely the deploy broke it
+      - alert: DemoErrorsAfterDeploy
+        expr: |
+          probe_http_status_code{site="demo"} >= 500
+          and on() (time() - demo_last_deploy_timestamp_seconds) < 900
+        for: 10s
+        labels:
+          severity: page
+          remediation: rollback
+        annotations:
+          summary: demo app returns 5xx right after a deploy, rolling back
+
+      - alert: DemoDiskAlmostFull
+        expr: demo_disk_free_bytes / demo_disk_total_bytes < 0.10
+        for: 10s
+        labels:
+          severity: page
+          site: demo
+          remediation: cleanup_disk
+        annotations:
+          summary: "demo app disk is {{ $value | humanizePercentage }} free, cleaning /data/tmp"

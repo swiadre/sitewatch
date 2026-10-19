@@ -1,0 +1,13 @@
+route:
+  receiver: remediator
+  group_by: [alertname, site]
+  group_wait: 5s        # short, the remediator should act fast
+  group_interval: 1m
+  repeat_interval: 4h
+
+receivers:
+  - name: remediator
+    webhook_configs:
+      # the remediator sends telegram messages and fixes known problems
+      - url: http://remediator:9000/alerts
+        send_resolved: true

@@ -1,9 +1,14 @@
+name: sitewatch
+
 services:
   prober:
     build: ..
     restart: unless-stopped
+    command: ["python", "-u", "-m", "prober", "--metrics-port", "8000", "--config", "/etc/sitewatch/prober.yaml"]
     environment:
       - TZ=Europe/Warsaw
+    volumes:
+      - ./prober.yaml:/etc/sitewatch/prober.yaml:ro
     ports:
       - "8000:8000"
 
@@ -13,11 +18,38 @@ services:
     command:
       - --config.file=/etc/prometheus/prometheus.yml
       - --storage.tsdb.retention.time=45d   # need >30d for the SLO window
+      - --web.enable-lifecycle              # allows POST /-/reload
     volumes:
       - ./prometheus:/etc/prometheus:ro
       - prometheus-data:/prometheus
     ports:
       - "9090:9090"
+
+  alertmanager:
+    image: prom/alertmanager:v0.27.0
+    restart: unless-stopped
+    volumes:
+      - ./alertmanager:/etc/alertmanager:ro
+    ports:
+      - "9093:9093"
+
+  remediator:
+    build:
+      context: ..
+      dockerfile: remediation/Dockerfile
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Warsaw
+      - DEMO_NETWORK=sitewatch_default
+      - GRAFANA_URL=${GRAFANA_URL:-http://localhost:3000}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
+      - MAX_ACTIONS_PER_HOUR=${MAX_ACTIONS_PER_HOUR:-3}
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - remediator-data:/data
+    ports:
+      - "9000:9000"
 
   grafana:
     image: grafana/grafana:11.2.2
@@ -38,3 +70,4 @@ services:
 volumes:
   prometheus-data:
   grafana-data:
+  remediator-data:
