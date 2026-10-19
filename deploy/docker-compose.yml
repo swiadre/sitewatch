@@ -45,6 +45,7 @@ services:
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
       - MAX_ACTIONS_PER_HOUR=${MAX_ACTIONS_PER_HOUR:-3}
+      - ACTION_COOLDOWN_SECONDS=${ACTION_COOLDOWN_SECONDS:-120}
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
       - remediator-data:/data

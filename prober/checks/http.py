@@ -14,12 +14,16 @@ class HttpResult:
 
 
 async def check_http(
-    client: httpx.AsyncClient, url: str, expected_text: str | None = None
+    client: httpx.AsyncClient,
+    url: str,
+    expected_text: str | None = None,
+    timeout: float | None = None,
 ) -> HttpResult:
     """GET the url and check status code, response time and (optionally) page content."""
     start = time.perf_counter()
     try:
-        resp = await client.get(url, follow_redirects=True)
+        kwargs = {"timeout": timeout} if timeout is not None else {}
+        resp = await client.get(url, follow_redirects=True, **kwargs)
     except httpx.HTTPError as e:
         # timeouts, connection refused, bad TLS etc. all end up here
         return HttpResult(ok=False, error=type(e).__name__)

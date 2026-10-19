@@ -39,12 +39,15 @@ async def skipped_tls() -> TlsResult:
     return TlsResult(ok=True, error="skipped")
 
 
-async def probe_site(client: httpx.AsyncClient, site: Site, timeout: float) -> SiteReport:
+async def probe_site(
+    client: httpx.AsyncClient, site: Site, timeout: float | None = None
+) -> SiteReport:
+    timeout = timeout or site.timeout_seconds
     # plain http sites (like the local demo app) have no certificate to check
     tls_check = check_tls(site.hostname) if site.is_https else skipped_tls()
     http, tls, dns = await asyncio.gather(
         with_timeout(
-            check_http(client, site.url, site.expected_text),
+            check_http(client, site.url, site.expected_text, timeout=timeout),
             timeout,
             HttpResult(ok=False, error="Timeout"),
         ),
@@ -55,9 +58,7 @@ async def probe_site(client: httpx.AsyncClient, site: Site, timeout: float) -> S
 
 
 async def probe_all(client: httpx.AsyncClient, config: Config) -> list[SiteReport]:
-    return await asyncio.gather(
-        *(probe_site(client, site, config.timeout_seconds) for site in config.sites)
-    )
+    return await asyncio.gather(*(probe_site(client, site) for site in config.sites))
 
 
 def format_report(r: SiteReport) -> str:
@@ -76,11 +77,11 @@ def now() -> str:
     return f"{datetime.now():%Y-%m-%d %H:%M:%S}"
 
 
-async def site_loop(client: httpx.AsyncClient, site: Site, timeout: float) -> None:
+async def site_loop(client: httpx.AsyncClient, site: Site) -> None:
     """Probe one site forever. Every site has its own loop so they can have different intervals."""
     while True:
         started = time.monotonic()
-        report = await probe_site(client, site, timeout)
+        report = await probe_site(client, site)
         metrics.record(report)
         print(f"[{now()}]{format_report(report)}", flush=True)
 
@@ -101,7 +102,7 @@ async def run(config: Config, once: bool = False) -> None:
             return
 
         await asyncio.gather(
-            *(site_loop(client, site, config.timeout_seconds) for site in config.sites)
+            *(site_loop(client, site) for site in config.sites)
         )
 
 

@@ -14,6 +14,7 @@ class Site:
     expected_text: str | None = None
     # per-site override, if not set the global interval is used
     interval_seconds: float | None = None
+    timeout_seconds: float | None = None
 
     @property
     def hostname(self) -> str:
@@ -47,4 +48,6 @@ def load_config(path: str | Path = DEFAULT_CONFIG) -> Config:
     for site in config.sites:
         if site.interval_seconds is None:
             site.interval_seconds = config.interval_seconds
+        if site.timeout_seconds is None:
+            site.timeout_seconds = config.timeout_seconds
     return config

@@ -25,6 +25,18 @@ groups:
         annotations:
           summary: demo app returns 5xx right after a deploy, rolling back
 
+      # responses are slow but still work. in real life this would be "move the workload
+      # to another node" (k8s reschedule). here a restart gets the container a fresh network
+      # namespace, which also removes the `tc netem` delay from the chaos test
+      - alert: DemoSlow
+        expr: probe_last_duration_seconds{site="demo"} > 1
+        for: 10s
+        labels:
+          severity: page
+          remediation: restart
+        annotations:
+          summary: "demo app responds in {{ $value | humanizeDuration }}, restarting"
+
       - alert: DemoDiskAlmostFull
         expr: demo_disk_free_bytes / demo_disk_total_bytes < 0.10
         for: 10s

@@ -5,13 +5,15 @@ Only stdlib, no dependencies.
 
 - APP_VERSION env var is shown on the page
 - a version with "bad" in the name returns 500 on every request (simulates a broken deploy)
-- every request appends to a log file in DATA_DIR, so when the disk is full, requests fail
+- every request writes a temp file to DATA_DIR/tmp (like an upload/session cache would),
+  so when the disk is full, requests fail
 - GET /chaos/hang takes a lock and never gives it back -> every next request hangs forever
   (the process is alive, docker thinks it's fine, but nobody gets an answer = like a deadlock)
 """
 
 import os
 import shutil
+import tempfile
 import threading
 from datetime import datetime
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -40,8 +42,11 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(500, f"version {VERSION} is broken :(\n")
 
         try:
-            with open(os.path.join(DATA_DIR, "requests.log"), "a") as f:
-                f.write(f"{datetime.now().isoformat()} {self.path}\n")
+            # a new file needs a new block on disk, so this fails when the disk is full
+            # (appending one line to an existing file often still fits in the last block)
+            with tempfile.NamedTemporaryFile(dir=os.path.join(DATA_DIR, "tmp"), delete=True) as f:
+                f.write(f"{datetime.now().isoformat()} {self.path}\n".encode() * 64)
+                f.flush()
         except OSError as e:
             # e.g. "No space left on device"
             return self.reply(500, f"can't write to disk: {e}\n")
@@ -73,6 +78,6 @@ class Handler(BaseHTTPRequestHandler):
 
 
 if __name__ == "__main__":
-    os.makedirs(DATA_DIR, exist_ok=True)
+    os.makedirs(os.path.join(DATA_DIR, "tmp"), exist_ok=True)
     print(f"demo app {VERSION} listening on :{PORT}", flush=True)
     ThreadingHTTPServer(("0.0.0.0", PORT), Handler).serve_forever()

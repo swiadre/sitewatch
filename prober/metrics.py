@@ -9,6 +9,9 @@ PROBE_SUCCESS = Gauge(
 PROBE_DURATION = Histogram(
     "probe_duration_seconds", "HTTP response time", ["site"], buckets=LATENCY_BUCKETS
 )
+LAST_DURATION = Gauge(
+    "probe_last_duration_seconds", "HTTP response time of the last probe", ["site"]
+)
 PROBES_TOTAL = Counter("probes_total", "Number of probes", ["site", "result"])
 HTTP_STATUS = Gauge("probe_http_status_code", "Last HTTP status code (0 = no response)", ["site"])
 TLS_DAYS_LEFT = Gauge("tls_cert_days_left", "Days until the TLS certificate expires", ["site"])
@@ -39,6 +42,7 @@ def record(report) -> None:
 
     if report.http.duration_ms is not None:
         PROBE_DURATION.labels(site).observe(report.http.duration_ms / 1000)
+        LAST_DURATION.labels(site).set(report.http.duration_ms / 1000)
     if report.tls.days_left is not None:  # None also for http-only sites
         TLS_DAYS_LEFT.labels(site).set(report.tls.days_left)
     if report.dns.duration_ms is not None:

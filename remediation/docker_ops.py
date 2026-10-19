@@ -13,6 +13,8 @@ IMAGE = os.environ.get("DEMO_IMAGE", "sitewatch-demo")
 NETWORK = os.environ.get("DEMO_NETWORK", "sitewatch_default")
 SOURCE_DIR = os.environ.get("DEMO_SOURCE", "/demo")
 DISK_SIZE = os.environ.get("DEMO_DISK_SIZE", "20m")
+# also published on the host so the chaos scripts can measure recovery from outside
+HOST_PORT = int(os.environ.get("DEMO_HOST_PORT", "8081"))
 
 
 class DemoApp:
@@ -74,6 +76,7 @@ class DemoApp:
             network=NETWORK,
             # small tmpfs so the "disk full" chaos test fills it in a second
             tmpfs={"/data": f"size={DISK_SIZE}"},
+            ports={"8080/tcp": HOST_PORT},
             labels={"sitewatch.managed": "true"},
         )
         entry = {"version": version, "ts": time.time(), "reason": reason}
@@ -104,7 +107,7 @@ class DemoApp:
         return {"status_before": status_before}
 
     def cleanup_disk(self) -> dict:
-        """Delete everything in /data/tmp (the "cache" dir). The request log stays."""
+        """Delete everything in /data/tmp (the temp/cache dir)."""
         c = self.client.containers.get(CONTAINER)
         result = c.exec_run(["sh", "-c", "du -sh /data/tmp 2>/dev/null; rm -rf /data/tmp/*"])
         return {"output": result.output.decode().strip()}

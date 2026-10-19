@@ -42,3 +42,8 @@ def test_init_site_creates_failure_counter():
     metrics.init_site("metrics-new")
     assert value("probes_total", site="metrics-new", result="failure") == 0
     assert value("probes_total", site="metrics-new", result="success") == 0
+
+
+def test_last_duration_gauge():
+    metrics.record(make_report("metrics-last"))
+    assert value("probe_last_duration_seconds", site="metrics-last") == 0.42
