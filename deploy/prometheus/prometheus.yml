@@ -15,6 +15,15 @@ scrape_configs:
     scrape_interval: 5s   # demo app is probed every 5s, so scrape at least that often
     static_configs:
       - targets: ["prober:8000"]
+        labels:
+          region: main
+
+  # probers in other regions (created by terraform, file written by the VM startup script).
+  # locally the file doesn't exist and this job just has no targets
+  - job_name: sitewatch-prober-remote
+    scrape_interval: 15s
+    file_sd_configs:
+      - files: ["/etc/prometheus/remote-probers*.json"]
 
   - job_name: remediator
     static_configs:
