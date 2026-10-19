@@ -1,0 +1,40 @@
+services:
+  prober:
+    build: ..
+    restart: unless-stopped
+    environment:
+      - TZ=Europe/Warsaw
+    ports:
+      - "8000:8000"
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    restart: unless-stopped
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=45d   # need >30d for the SLO window
+    volumes:
+      - ./prometheus:/etc/prometheus:ro
+      - prometheus-data:/prometheus
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:11.2.2
+    restart: unless-stopped
+    environment:
+      - GF_AUTH_ANONYMOUS_ENABLED=true
+      - GF_AUTH_ANONYMOUS_ORG_ROLE=Viewer
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_PASSWORD:-admin}
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana-data:/var/lib/grafana
+    ports:
+      - "${GRAFANA_PORT:-3000}:3000"
+    depends_on:
+      - prometheus
+
+volumes:
+  prometheus-data:
+  grafana-data:
