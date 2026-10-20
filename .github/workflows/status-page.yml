@@ -3,7 +3,7 @@ name: Status page
 # builds the static status page from the data branch and publishes it on GitHub Pages
 on:
   schedule:
-    - cron: "7 * * * *"   # every hour
+    - cron: "17,47 * * * *"   # twice an hour, GitHub skips some scheduled runs
   workflow_dispatch:
   push:
     branches: [main]

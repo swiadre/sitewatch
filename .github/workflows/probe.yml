@@ -4,7 +4,8 @@ name: Probe
 # laptop is off. results are appended to the `data` branch (one JSON line per site per run)
 on:
   schedule:
-    - cron: "*/5 * * * *"   # best effort, GitHub sometimes runs it late or skips it
+    # best effort: GitHub delays or skips scheduled runs a lot (esp. at :00), offset helps a bit
+    - cron: "2-59/5 * * * *"
   workflow_dispatch:
     inputs:
       test_alert:
