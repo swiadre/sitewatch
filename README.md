@@ -1,6 +1,9 @@
 # sitewatch
 
 [![CI](https://github.com/swiadre/sitewatch/actions/workflows/ci.yml/badge.svg)](https://github.com/swiadre/sitewatch/actions/workflows/ci.yml)
+[![Probe](https://github.com/swiadre/sitewatch/actions/workflows/probe.yml/badge.svg)](https://github.com/swiadre/sitewatch/actions/workflows/probe.yml)
+
+**Live status page: https://swiadre.github.io/sitewatch/**
 
 Monitoring + SLOs + auto-remediation for 3 real production sites, built to learn how
 Google-style SRE works in practice (SLIs/SLOs, error budgets, burn-rate alerts, chaos testing).
@@ -10,6 +13,8 @@ Google-style SRE works in practice (SLIs/SLOs, error budgets, burn-rate alerts, 
 - alerts go to Telegram through a small **remediator** service that also **fixes known failures by itself**
   (restart, rollback, disk cleanup) with safety limits
 - **chaos tests** for 5 failure scenarios measure MTTD / MTTR with and without auto-remediation
+- **24/7 probes from GitHub Actions** every ~5 min + a public [status page](https://swiadre.github.io/sitewatch/)
+  with 30-day availability, error budget and incidents (works even when my laptop is off)
 - infrastructure as code (Terraform, GCP) + CI/CD (GitHub Actions)
 
 ![dashboard](docs/dashboard.png)
@@ -58,6 +63,9 @@ flowchart LR
     P[prober<br/>Python asyncio] -->|HTTP/TLS/DNS every 30s| sites
     P -->|every 5s| D
     PR[probers in other regions<br/>terraform] -.-> sites
+    GH[GitHub Actions prober<br/>every 5 min] -->|JSON lines| DB[(data branch)]
+    GH -.-> sites
+    DB --> SP[status page<br/>GitHub Pages]
 
     PROM[(Prometheus<br/>SLO recording +<br/>burn-rate rules)] -->|scrape /metrics| P
     PROM -.-> PR
@@ -79,6 +87,7 @@ flowchart LR
 | [`chaos/`](chaos/) | failure scenarios + MTTD/MTTR measurement. **[Details →](chaos/README.md)** |
 | [`deploy/`](deploy/) | docker compose, Prometheus rules + promtool unit tests, Alertmanager, Grafana dashboard JSON |
 | [`terraform/`](terraform/) | GCP: main VM, probers in 2 more regions, firewall, optional DNS |
+| [`statuspage/`](statuspage/) | builds the static status page from the probe data in the [`data`](https://github.com/swiadre/sitewatch/tree/data) branch |
 | [`postmortems/`](postmortems/) | blameless postmortems of real incidents |
 
 ## Design decisions (short version)
@@ -151,8 +160,12 @@ to GHCR. The deploy step to GCP is ready but switched off until the GCP project 
 
 ## Known limitations / what I'd do differently
 
-- all real numbers so far come from probing **from my home network**. The regional probers
-  are in Terraform but not deployed yet
+- the Docker setup (Prometheus, alerts, auto-remediation) runs **on my laptop**, so it only
+  works while the laptop is awake. The always-on part is the GitHub Actions prober, and that's
+  what the status page and the 30-day numbers come from. GitHub's cron is best effort
+  (runs can be late or skipped), so it's ~5-15 min resolution, not 30 s
+- the GCP setup (Terraform: always-on VM + probers in 2 more regions) is written and validated
+  in CI but **not deployed**, because I didn't want to pay for it
 - the remediator talks to the Docker socket, which is root on the host. Fine on my own
   machine, but in a real setup it'd be a k8s operator with narrow RBAC instead
 - SLO windows need weeks of data to be meaningful. In the first hours a single failure looks
