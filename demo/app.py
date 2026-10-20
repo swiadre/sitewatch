@@ -31,6 +31,15 @@ class Handler(BaseHTTPRequestHandler):
         if self.path == "/metrics":
             return self.metrics()
 
+        if self.path == "/healthz":
+            # for the k8s livenessProbe: only "is the process able to answer at all".
+            # takes the same lock as normal requests, so a deadlock makes this hang too
+            # -> probe times out -> kubelet restarts the container.
+            # doesn't check the version or the disk on purpose: restarting doesn't fix those
+            with lock:
+                pass
+            return self.reply(200, "ok\n", "text/plain")
+
         if self.path == "/chaos/hang":
             lock.acquire()  # never released
             return self.reply(200, "ok, hanging now\n")
