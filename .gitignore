@@ -10,3 +10,7 @@ venv/
 
 # my personal notes
 PLAN.md
+
+# status page build output / local checkout of the data branch
+public/
+data-branch/
