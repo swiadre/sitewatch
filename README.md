@@ -39,8 +39,9 @@ Chaos tests on the demo app: 5 failure scenarios × 10 runs each, **with auto-re
 - the repeated runs found **2 bugs in my own alerting pipeline** (Alertmanager grouping
   added 10-20 s, a 15 s scrape interval delayed bad-deploy detection), both fixed
   ([what happened](chaos/README.md#what-the-chaos-tests-found-bugs-in-my-own-setup))
-- MTTR **without** automation (a human gets the Telegram alert and fixes it by hand):
-  _not measured yet_, see `--mode manual` in [chaos/README.md](chaos/README.md#running)
+- I didn't measure MTTR **without** automation (a human fixing it by hand), so there's no
+  before/after number here. The runner supports it (`--mode manual`), see
+  [chaos/README.md](chaos/README.md#running)
 
 ## Architecture
 
@@ -116,9 +117,15 @@ docker compose up -d --build
 
 If port 3000 is taken: `GRAFANA_PORT=3001 docker compose up -d`.
 
-Telegram: create a bot with [@BotFather](https://t.me/BotFather), send it any message, get
-your chat id from `https://api.telegram.org/bot<TOKEN>/getUpdates`, put both into `deploy/.env`.
-Without them the remediator just prints the messages to its log.
+Telegram alerts:
+1. create a bot with [@BotFather](https://t.me/BotFather) (`/newbot`) and put the token into
+   `deploy/.env` as `TELEGRAM_BOT_TOKEN=...`
+2. open your new bot in Telegram and send it `/start`
+3. `python -m remediation.telegram_setup` finds your chat id, saves it to `deploy/.env` and
+   sends a test message
+4. `cd deploy && docker compose up -d remediator`
+
+Without a token the remediator just prints the messages to its log.
 
 Only the prober, without Docker:
 

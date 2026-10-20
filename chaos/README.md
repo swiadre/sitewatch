@@ -46,7 +46,7 @@ With auto-remediation, 10 valid runs per scenario (Oct 2026, on my laptop, colim
 | disk | auto | 10 | 10/10 | 17.6 s | 17.6 s | 17.8 s | 17.6 s | 18.1 s |
 | bad_deploy | auto | 10 | 10/10 | 23.0 s | 23.1 s | 23.5 s | 23.7 s | 24.0 s |
 
-Without auto-remediation (human fixes it): not measured yet.
+Without auto-remediation (a human fixes it): not measured.
 
 Raw data for every run is in [`results/`](results/) (one JSON line per run).
 
