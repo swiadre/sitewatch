@@ -68,7 +68,12 @@ def send(text: str) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("--data", default="data")
+    parser.add_argument("--test", action="store_true", help="just send a test message")
     args = parser.parse_args()
+
+    if args.test:
+        send(f'🧪 test alert from GitHub Actions. <a href="{STATUS_PAGE}">status page</a>')
+        return
 
     rows = load_rows(Path(args.data))
     for site in sorted({r["site"] for r in rows}):
