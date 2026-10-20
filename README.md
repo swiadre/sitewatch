@@ -142,6 +142,11 @@ Telegram alerts:
 
 Without a token the remediator just prints the messages to its log.
 
+24/7 probes: GitHub's own cron skips most scheduled runs in this repo (1 run in 8 hours on day 1),
+so the probe workflow is also started every 5 minutes by a free external cron
+([cron-job.org](https://cron-job.org)) through the GitHub API (`POST .../actions/workflows/probe.yml/dispatches`)
+with a fine-grained token that can only run workflows in this repo.
+
 Only the prober, without Docker:
 
 ```bash

@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: write
+  actions: write   # to start the status page build
 
 concurrency:
   group: probe
@@ -60,3 +61,12 @@ jobs:
           # another run could have pushed in the meantime
           for i in 1 2 3; do git push -q && exit 0; git pull -q --rebase; done
           exit 1
+
+      - name: Rebuild the status page every ~30 min
+        # github skips a lot of scheduled runs, so the probe (started from cron-job.org,
+        # see README) also kicks off the status page build twice an hour
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          minute=$(date -u +%M)
+          if [ $((10#$minute % 30)) -lt 5 ]; then gh workflow run status-page.yml --ref main; fi
