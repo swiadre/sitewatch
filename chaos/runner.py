@@ -22,6 +22,9 @@ from chaos.scenarios import DEMO_URL, REMEDIATOR, SCENARIOS, TARGET, Scenario
 PROMETHEUS = "http://localhost:9092" if TARGET == "k8s" else "http://localhost:9090"
 RESULTS_DIR = Path(__file__).parent / "results" / ("k8s" if TARGET == "k8s" else "")
 CHECK_EVERY = 0.5
+# if not a single check failed this long after the fault, the app was never visibly down
+# (happens in k8s: a deleted pod is replaced faster than we check)
+NO_IMPACT_AFTER = 60
 HEALTHY_STREAK = 3
 MAX_LATENCY = 1.0  # same threshold as the DemoSlow alert
 
@@ -100,8 +103,13 @@ def run_once(client: httpx.Client, scenario: Scenario, mode: str, timeout: float
     went_down_at = recovered_at = detected_at = None
     streak_start, streak = None, 0
     told_human = False
+    no_failed_check = False
 
     while time.time() - t0 < timeout:
+        if went_down_at is None and time.time() - t0 > NO_IMPACT_AFTER:
+            no_failed_check = True
+            break
+
         ok = demo_healthy(client)
         now = time.time()
 
@@ -146,8 +154,12 @@ def run_once(client: httpx.Client, scenario: Scenario, mode: str, timeout: float
         "t0": t0,
         "went_down_s": round(went_down_at - t0, 2) if went_down_at else None,
         "mttd_s": round(detected_at - t0, 2) if detected_at else None,
-        "mttr_s": round(recovered_at - t0, 2) if recovered_at else None,
-        "recovered": recovered_at is not None,
+        "mttr_s": 0.0
+        if no_failed_check
+        else (round(recovered_at - t0, 2) if recovered_at else None),
+        "recovered": no_failed_check or recovered_at is not None,
+        # true = no check ever failed (checks every 0.5 s, so a shorter blip could be missed)
+        "no_failed_check": no_failed_check,
         "action": action["action"] if action else None,
         "action_at_s": round(action["ts"] - t0, 2) if action else None,
     }

@@ -54,7 +54,10 @@ def summarize(rows: list[dict]) -> list[dict]:
         fixers = {}
         for r in runs:
             if r["recovered"]:
-                who = r.get("action") or "kubernetes itself"
+                if r.get("no_failed_check"):
+                    who = "no visible downtime"
+                else:
+                    who = r.get("action") or "kubernetes itself"
                 fixers[who] = fixers.get(who, 0) + 1
         summary.append(
             {
