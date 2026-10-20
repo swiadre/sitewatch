@@ -15,6 +15,8 @@ Google-style SRE works in practice (SLIs/SLOs, error budgets, burn-rate alerts, 
 - **chaos tests** for 5 failure scenarios measure MTTD / MTTR with and without auto-remediation
 - **24/7 probes from GitHub Actions** every ~5 min + a public [status page](https://swiadre.github.io/sitewatch/)
   with 30-day availability, error budget and incidents (works even when my laptop is off)
+- runs on **Kubernetes** too (local kind cluster): least-privilege RBAC for the remediator,
+  liveness probes, and the same chaos tests to compare Docker vs Kubernetes
 - infrastructure as code (Terraform, GCP) + CI/CD (GitHub Actions)
 
 ![dashboard](docs/dashboard.png)
@@ -41,6 +43,9 @@ Chaos tests on the demo app: 5 failure scenarios × 10 runs each, **with auto-re
 - MTTR is only ~0.4 s more than MTTD, so **almost all of the recovery time is detection**.
   The fix itself (restart / rollback / cleanup) takes well under a second. To go faster I'd
   need faster detection (shorter probe interval and `for:`), at the cost of more false alarms
+- **on Kubernetes**, crashes and hangs were fixed by the platform itself (pod replaced in
+  0.7 s on average, liveness probe at ~15 s), faster than my remediator. Bad deploys, full disks
+  and network latency still needed it ([comparison](chaos/README.md#docker-vs-kubernetes))
 - the repeated runs found **2 bugs in my own alerting pipeline** (Alertmanager grouping
   added 10-20 s, a 15 s scrape interval delayed bad-deploy detection), both fixed
   ([what happened](chaos/README.md#what-the-chaos-tests-found-bugs-in-my-own-setup))
@@ -86,6 +91,7 @@ flowchart LR
 | [`demo/`](demo/) | tiny app used as a target for remediation and chaos tests |
 | [`chaos/`](chaos/) | failure scenarios + MTTD/MTTR measurement. **[Details →](chaos/README.md)** |
 | [`deploy/`](deploy/) | docker compose, Prometheus rules + promtool unit tests, Alertmanager, Grafana dashboard JSON |
+| [`k8s/`](k8s/) | the same stack on a local Kubernetes (kind) cluster, RBAC for the remediator. **[Details →](k8s/README.md)** |
 | [`terraform/`](terraform/) | GCP: main VM, probers in 2 more regions, firewall, optional DNS |
 | [`statuspage/`](statuspage/) | builds the static status page from the probe data in the [`data`](https://github.com/swiadre/sitewatch/tree/data) branch |
 | [`postmortems/`](postmortems/) | blameless postmortems of real incidents |
@@ -166,8 +172,9 @@ to GHCR. The deploy step to GCP is ready but switched off until the GCP project 
   (runs can be late or skipped), so it's ~5-15 min resolution, not 30 s
 - the GCP setup (Terraform: always-on VM + probers in 2 more regions) is written and validated
   in CI but **not deployed**, because I didn't want to pay for it
-- the remediator talks to the Docker socket, which is root on the host. Fine on my own
-  machine, but in a real setup it'd be a k8s operator with narrow RBAC instead
+- in docker compose the remediator talks to the Docker socket, which is root on the host.
+  The [Kubernetes version](k8s/) fixes that with a ServiceAccount that can only delete pods and
+  patch one deployment in one namespace
 - SLO windows need weeks of data to be meaningful. In the first hours a single failure looks
   much bigger than it is. This caused a real false page, now prevented by a minimum-data
   guard ([postmortem](postmortems/2026-10-19-false-page-after-laptop-wake.md))

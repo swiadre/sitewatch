@@ -38,17 +38,60 @@ Alertmanager `group_wait: 5s` → webhook.
 
 With auto-remediation, 10 valid runs per scenario (Oct 2026, on my laptop, colima VM):
 
-| scenario | mode | runs | recovered | MTTD mean | MTTD median | MTTR mean | MTTR median | MTTR max |
-|---|---|---|---|---|---|---|---|---|
-| kill | auto | 10 | 10/10 | 18.4 s | 18.4 s | 18.6 s | 18.6 s | 19.1 s |
-| hang | auto | 10 | 10/10 | 23.5 s | 23.4 s | 23.9 s | 23.9 s | 24.3 s |
-| latency | auto | 10 | 10/10 | 22.7 s | 22.4 s | 23.2 s | 22.9 s | 24.8 s |
-| disk | auto | 10 | 10/10 | 17.6 s | 17.6 s | 17.8 s | 17.6 s | 18.1 s |
-| bad_deploy | auto | 10 | 10/10 | 23.0 s | 23.1 s | 23.5 s | 23.7 s | 24.0 s |
+| scenario | mode | runs | recovered | MTTD mean | MTTD median | MTTR mean | MTTR median | MTTR max | fixed by |
+|---|---|---|---|---|---|---|---|---|---|
+| kill | auto | 10 | 10/10 | 18.4 s | 18.4 s | 18.6 s | 18.6 s | 19.1 s | restart 10× |
+| hang | auto | 10 | 10/10 | 23.5 s | 23.4 s | 23.9 s | 23.9 s | 24.3 s | restart 10× |
+| latency | auto | 10 | 10/10 | 22.7 s | 22.4 s | 23.2 s | 22.9 s | 24.8 s | restart 10× |
+| disk | auto | 10 | 10/10 | 17.6 s | 17.6 s | 17.8 s | 17.6 s | 18.1 s | cleanup_disk 10× |
+| bad_deploy | auto | 10 | 10/10 | 23.0 s | 23.1 s | 23.5 s | 23.7 s | 24.0 s | rollback 10× |
 
 Without auto-remediation (a human fixes it): not measured.
 
 Raw data for every run is in [`results/`](results/) (one JSON line per run).
+
+## Docker vs Kubernetes
+
+The same 5 scenarios against the [kind cluster](../k8s/), 10 valid runs each
+(`CHAOS_TARGET=k8s`):
+
+| scenario | mode | runs | recovered | MTTD mean | MTTD median | MTTR mean | MTTR median | MTTR max | fixed by |
+|---|---|---|---|---|---|---|---|---|---|
+| kill | auto | 10 | 10/10 | - | - | 0.7 s | 0.0 s | 1.8 s | kubernetes itself 4×, no visible downtime 6× |
+| hang | auto | 10 | 10/10 | 18.5 s | 18.5 s | 18.0 s | 18.3 s | 18.7 s | k8s livenessProbe 8×, kubernetes itself 2× |
+| latency | auto | 10 | 10/10 | 25.5 s | 26.1 s | 27.4 s | 27.5 s | 31.0 s | restart 10× |
+| disk | auto | 10 | 10/10 | 18.5 s | 17.7 s | 19.9 s | 19.2 s | 23.9 s | cleanup_disk 10× |
+| bad_deploy | auto | 10 | 10/10 | 21.7 s | 22.2 s | 23.3 s | 23.9 s | 24.6 s | rollback 10× |
+
+Side by side (mean MTTR):
+
+| scenario | docker + remediator | kubernetes | who fixed it in kubernetes |
+|---|---|---|---|
+| kill | 18.6 s | **0.7 s** | the ReplicaSet (6 of 10 runs had no failed check at all) |
+| hang | 23.9 s | **18.0 s** | the `livenessProbe` (~15 s), before my alert even fired |
+| latency | 23.2 s | 27.4 s | remediator (delete pod → new network namespace) |
+| disk | 17.8 s | 19.9 s | remediator (delete pod → new empty `emptyDir`) |
+| bad_deploy | 23.5 s | 23.3 s | remediator (rollback = patch the image tag) |
+
+What I took from it:
+- **For crashes and hangs, the platform beats my remediator.** Kubernetes replaces a deleted
+  pod in under 2 s, before any alert can fire. The liveness probe restarts a deadlocked
+  container ~15 s in, while my alert needs ~18 s (probe + scrape + `for: 10s`). In 2 hang
+  runs the remediator restarted a pod that was already fixed (harmless, but useless). On
+  Kubernetes I'd remove `remediation: restart` from `DemoUnresponsive` and keep it as a
+  page only.
+- **Kubernetes can't fix the rest.** A bad version, a full disk and a slow network all
+  still need something that knows about the app. That's where the remediator is still needed.
+- **"Who fixed it" needs evidence, not timestamps.** My first version compared timestamps and
+  got it wrong (it even said "kubernetes" for docker runs). The final version uses the
+  kubelet's "failed liveness probe, will be restarted" events. Kubernetes merges repeated
+  events (`count: 5`, only first and last timestamp), so for 2 runs there's no event of their
+  own. They're counted as "kubernetes itself", because the app came back without any
+  remediator action.
+- **My laptop sleeping wrecked 11 of the k8s runs** (the lid was closed or the battery was low).
+  One of them even made me believe in a keep-alive bug that didn't exist: the "46 s delay"
+  was exactly the time the laptop woke up. Every run was checked against `pmset -g log`,
+  invalid ones are kept in the raw data with the reason, and I ran replacements.
 
 ## What the chaos tests found (bugs in my own setup)
 
