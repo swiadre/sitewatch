@@ -1,0 +1,89 @@
+# the remediator gets its own service account with the smallest set of permissions it needs,
+# only in this namespace. no docker socket, no exec into pods, no cluster-wide access
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: remediator
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: remediator
+rules:
+  - apiGroups: [""]
+    resources: [pods]
+    verbs: [get, list, delete]          # restart = delete the pod
+  - apiGroups: [apps]
+    resources: [deployments]
+    resourceNames: [sitewatch-demo]     # only this one deployment
+    verbs: [get, patch]                 # deploy / rollback = change the image tag
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: remediator
+subjects:
+  - kind: ServiceAccount
+    name: remediator
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: remediator
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: remediator
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: remediator}
+  template:
+    metadata:
+      labels: {app: remediator}
+    spec:
+      serviceAccountName: remediator
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+      containers:
+        - name: remediator
+          image: sitewatch-remediator:dev
+          imagePullPolicy: Never
+          env:
+            - {name: REMEDIATOR_BACKEND, value: k8s}
+            - {name: DATA_DIR, value: /data}
+            - {name: GRAFANA_URL, value: "http://localhost:3002"}
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef: {fieldPath: metadata.namespace}
+            # created by k8s/up.sh from deploy/.env, optional
+            - name: TELEGRAM_BOT_TOKEN
+              valueFrom:
+                secretKeyRef: {name: telegram, key: TELEGRAM_BOT_TOKEN, optional: true}
+            - name: TELEGRAM_CHAT_ID
+              valueFrom:
+                secretKeyRef: {name: telegram, key: TELEGRAM_CHAT_ID, optional: true}
+          ports:
+            - containerPort: 9000
+          readinessProbe:
+            httpGet: {path: /status, port: 9000}
+          resources:
+            requests: {cpu: 20m, memory: 64Mi}
+            limits: {memory: 256Mi}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: remediator
+spec:
+  selector: {app: remediator}
+  type: NodePort   # reachable on the host through kind.yaml port mappings
+  ports:
+    - port: 9000
+      nodePort: 30900

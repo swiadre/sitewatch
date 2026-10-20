@@ -50,6 +50,12 @@ def summarize(rows: list[dict]) -> list[dict]:
         mttr = [r["mttr_s"] for r in runs if r["recovered"]]
         d_mean, d_med, _ = stats(mttd)
         r_mean, r_med, r_max = stats(mttr)
+        # who fixed it: the remediator (its action) or nobody = kubernetes by itself
+        fixers = {}
+        for r in runs:
+            if r["recovered"]:
+                who = r.get("action") or "kubernetes itself"
+                fixers[who] = fixers.get(who, 0) + 1
         summary.append(
             {
                 "scenario": scenario,
@@ -62,6 +68,7 @@ def summarize(rows: list[dict]) -> list[dict]:
                 "mttr_mean": r_mean,
                 "mttr_median": r_med,
                 "mttr_max": r_max,
+                "fixed_by": ", ".join(f"{k} {v}×" for k, v in sorted(fixers.items())),
             }
         )
     order = ["kill", "hang", "latency", "disk", "bad_deploy"]
@@ -74,23 +81,24 @@ def summarize(rows: list[dict]) -> list[dict]:
 def to_markdown(summary: list[dict]) -> str:
     lines = [
         "| scenario | mode | runs | recovered | MTTD mean | MTTD median "
-        "| MTTR mean | MTTR median | MTTR max |",
-        "|---|---|---|---|---|---|---|---|---|",
+        "| MTTR mean | MTTR median | MTTR max | fixed by |",
+        "|---|---|---|---|---|---|---|---|---|---|",
     ]
     for s in summary:
         lines.append(
             f"| {s['scenario']} | {s['mode']} | {s['runs']} | {s['recovered']}/{s['runs']} "
             f"| {fmt(s['mttd_mean'])} | {fmt(s['mttd_median'])} | {fmt(s['mttr_mean'])} "
-            f"| {fmt(s['mttr_median'])} | {fmt(s['mttr_max'])} |"
+            f"| {fmt(s['mttr_median'])} | {fmt(s['mttr_max'])} | {s['fixed_by']} |"
         )
     return "\n".join(lines)
 
 
 def main() -> None:
-    table = to_markdown(summarize(load()))
+    results_dir = RESULTS_DIR / "k8s" if "--k8s" in sys.argv else RESULTS_DIR
+    table = to_markdown(summarize(load(results_dir)))
     print(table)
     if "--write" in sys.argv:
-        (RESULTS_DIR / "summary.md").write_text(table + "\n")
+        (results_dir / "summary.md").write_text(table + "\n")
 
 
 if __name__ == "__main__":

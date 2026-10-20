@@ -35,6 +35,7 @@ def test_summary(tmp_path):
 
     md = to_markdown(summary)
     assert "| kill | auto | 2 | 2/2 |" in md
+    assert "kubernetes itself 2×" in md  # no action in the test rows
 
 
 def test_fmt():

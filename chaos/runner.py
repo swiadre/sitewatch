@@ -17,10 +17,10 @@ from pathlib import Path
 
 import httpx
 
-from chaos.scenarios import DEMO_URL, REMEDIATOR, SCENARIOS, Scenario
+from chaos.scenarios import DEMO_URL, REMEDIATOR, SCENARIOS, TARGET, Scenario
 
-PROMETHEUS = "http://localhost:9090"
-RESULTS_DIR = Path(__file__).parent / "results"
+PROMETHEUS = "http://localhost:9092" if TARGET == "k8s" else "http://localhost:9090"
+RESULTS_DIR = Path(__file__).parent / "results" / ("k8s" if TARGET == "k8s" else "")
 CHECK_EVERY = 0.5
 HEALTHY_STREAK = 3
 MAX_LATENCY = 1.0  # same threshold as the DemoSlow alert
@@ -165,7 +165,7 @@ def main() -> None:
 
     names = list(SCENARIOS) if args.scenario == "all" else [args.scenario]
     timeout = args.timeout or (300 if args.mode == "auto" else 1800)
-    RESULTS_DIR.mkdir(exist_ok=True)
+    RESULTS_DIR.mkdir(parents=True, exist_ok=True)
 
     with httpx.Client(timeout=10) as client:
         for name in names:

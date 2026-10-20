@@ -7,15 +7,21 @@ Every scenario knows:
 - how to clean up leftovers after a run
 """
 
+import os
 import subprocess
 from dataclasses import dataclass, field
 
 import httpx
 
+# docker = the docker compose setup in deploy/, k8s = the kind cluster from k8s/up.sh
+TARGET = os.environ.get("CHAOS_TARGET", "docker")
 DEMO = "sitewatch-demo"
-DEMO_URL = "http://localhost:8081"
-REMEDIATOR = "http://localhost:9000"
 NETSHOOT = "nicolaka/netshoot:v0.13"
+if TARGET == "k8s":
+    DEMO_URL, REMEDIATOR = "http://localhost:8082", "http://localhost:9002"
+else:
+    DEMO_URL, REMEDIATOR = "http://localhost:8081", "http://localhost:9000"
+KUBECTL = "kubectl -n sitewatch"
 
 
 def sh(cmd: str, check: bool = True) -> subprocess.CompletedProcess:
@@ -62,12 +68,33 @@ class Latency(Scenario):
         tc("qdisc del dev eth0 root", check=False)
 
 
+def demo_pod() -> str:
+    return sh(f"{KUBECTL} get pod -l app={DEMO} -o name").stdout.split()[0]
+
+
+def k8s_tc(args: str, check: bool = True) -> subprocess.CompletedProcess:
+    # ephemeral debug container in the demo pod: shares its network namespace, has NET_ADMIN
+    return sh(
+        f"{KUBECTL} debug {demo_pod()} --image={NETSHOOT} --profile=netadmin --attach=false "
+        f"-- tc {args}",
+        check=check,
+    )
+
+
+class K8sLatency(Scenario):
+    def inject(self) -> None:
+        k8s_tc("qdisc add dev eth0 root netem delay 800ms")
+
+    def cleanup(self) -> None:
+        k8s_tc("qdisc del dev eth0 root", check=False)
+
+
 class BadDeploy(Scenario):
     def inject(self) -> None:
         httpx.post(f"{REMEDIATOR}/deploy", json={"version": "1.1-bad"}, timeout=120)
 
 
-SCENARIOS = {
+DOCKER_SCENARIOS = {
     s.name: s
     for s in [
         Scenario(
@@ -114,3 +141,47 @@ SCENARIOS = {
         ),
     ]
 }
+
+
+K8S_SCENARIOS = {
+    s.name: s
+    for s in [
+        Scenario(
+            name="kill",
+            description="pod deleted (like a node problem or an OOM kill)",
+            alerts=["DemoUnresponsive"],
+            inject_cmd=f"{KUBECTL} delete pod -l app={DEMO} --grace-period=0 --force --wait=false",
+            manual_fix="nothing, the ReplicaSet creates a new pod",
+        ),
+        Hang(
+            name="hang",
+            description="process alive but deadlocked, every request hangs",
+            alerts=["DemoUnresponsive"],
+            manual_fix=f"{KUBECTL} delete pod -l app={DEMO}",
+        ),
+        K8sLatency(
+            name="latency",
+            description="+800 ms network delay on the pod (tc netem in a debug container)",
+            alerts=["DemoSlow"],
+            manual_fix=f"{KUBECTL} delete pod -l app={DEMO}",
+        ),
+        Scenario(
+            name="disk",
+            description="data volume (20Mi tmpfs) filled up to 100%",
+            alerts=["DemoDiskAlmostFull"],
+            inject_cmd=(
+                f"{KUBECTL} exec deploy/{DEMO} -- sh -c "
+                "'dd if=/dev/zero of=/data/tmp/junk bs=1M count=100 2>/dev/null; true'"
+            ),
+            manual_fix=f"{KUBECTL} exec deploy/{DEMO} -- rm -rf /data/tmp/junk",
+        ),
+        BadDeploy(
+            name="bad_deploy",
+            description="deploy of a version that returns 500 on every request",
+            alerts=["DemoErrorsAfterDeploy"],
+            manual_fix=f'curl -X POST {REMEDIATOR}/deploy -d \'{{"version": "1.0"}}\'',
+        ),
+    ]
+}
+
+SCENARIOS = K8S_SCENARIOS if TARGET == "k8s" else DOCKER_SCENARIOS

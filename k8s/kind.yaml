@@ -1,0 +1,11 @@
+# kind cluster with fixed host ports, so things are reachable without kubectl port-forward
+# (port-forward breaks when the pod behind it is deleted, which is exactly what chaos tests do)
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+nodes:
+  - role: control-plane
+    extraPortMappings:
+      - {containerPort: 30081, hostPort: 8082}   # demo app
+      - {containerPort: 30900, hostPort: 9002}   # remediator
+      - {containerPort: 30909, hostPort: 9092}   # prometheus
+      - {containerPort: 30300, hostPort: 3002}   # grafana

@@ -1,0 +1,48 @@
+# the app that gets broken on purpose. the remediator changes the image tag (deploy/rollback)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sitewatch-demo
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: sitewatch-demo}
+  template:
+    metadata:
+      labels: {app: sitewatch-demo}
+    spec:
+      terminationGracePeriodSeconds: 0
+      containers:
+        - name: demo
+          image: sitewatch-demo:1.0
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 8080
+          # deadlock -> /healthz hangs -> restart after 3 failed checks (~15 s).
+          # this does the same job as the remediator's "restart" for the hang scenario
+          livenessProbe:
+            httpGet: {path: /healthz, port: 8080}
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests: {cpu: 10m, memory: 16Mi}
+            limits: {memory: 64Mi}
+          volumeMounts:
+            - {name: data, mountPath: /data}
+      volumes:
+        - name: data
+          emptyDir:
+            medium: Memory   # tmpfs, so sizeLimit is a real limit and writes fail when full
+            sizeLimit: 20Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: sitewatch-demo   # same name as the container in docker compose
+spec:
+  selector: {app: sitewatch-demo}
+  type: NodePort   # reachable on the host through kind.yaml port mappings
+  ports:
+    - port: 8080
+      nodePort: 30081

@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prober
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: prober}
+  template:
+    metadata:
+      labels: {app: prober}
+    spec:
+      containers:
+        - name: prober
+          image: sitewatch-prober:dev   # loaded into kind by k8s/up.sh
+          imagePullPolicy: Never
+          args: ["python", "-u", "-m", "prober", "--metrics-port", "8000",
+                 "--config", "/etc/sitewatch/prober.yaml"]
+          env:
+            - {name: TZ, value: Europe/Warsaw}
+          ports:
+            - containerPort: 8000
+          readinessProbe:
+            httpGet: {path: /metrics, port: 8000}
+          resources:
+            requests: {cpu: 20m, memory: 48Mi}
+            limits: {memory: 128Mi}
+          volumeMounts:
+            - {name: config, mountPath: /etc/sitewatch}
+      volumes:
+        - name: config
+          configMap: {name: prober-config}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prober
+spec:
+  selector: {app: prober}
+  ports:
+    - port: 8000
