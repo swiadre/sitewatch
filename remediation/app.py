@@ -44,9 +44,7 @@ class AutoRequest(BaseModel):
 def create_app(demo=None, notifier=None, limiter=None, events=None) -> FastAPI:
     """demo/notifier/limiter/events can be swapped with fakes in tests."""
     if demo is None:
-        from remediation.docker_ops import DemoApp
-
-        demo = DemoApp(state_file=f"{DATA_DIR}/deployments.json")
+        demo = make_demo()
     notifier = notifier or Notifier()
     limiter = limiter or RateLimiter(
         max_actions=int(os.environ.get("MAX_ACTIONS_PER_HOUR", "3")),
@@ -161,12 +159,21 @@ def create_app(demo=None, notifier=None, limiter=None, events=None) -> FastAPI:
     return app
 
 
+def make_demo():
+    # docker (my laptop, docker compose) or kubernetes (k8s/ folder)
+    if os.environ.get("REMEDIATOR_BACKEND", "docker") == "k8s":
+        from remediation.k8s_ops import K8sDemoApp
+
+        return K8sDemoApp()
+    from remediation.docker_ops import DemoApp
+
+    return DemoApp(state_file=f"{DATA_DIR}/deployments.json")
+
+
 def main() -> None:
     import uvicorn
 
-    from remediation.docker_ops import DemoApp
-
-    demo = DemoApp(state_file=f"{DATA_DIR}/deployments.json")
+    demo = make_demo()
     demo.ensure_running(default_version=os.environ.get("DEMO_DEFAULT_VERSION", "1.0"))
     uvicorn.run(create_app(demo=demo), host="0.0.0.0", port=9000)
 
