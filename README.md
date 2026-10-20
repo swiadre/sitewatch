@@ -5,10 +5,10 @@
 
 **Live status page: https://swiadre.github.io/sitewatch/**
 
-Monitoring + SLOs + auto-remediation for 3 real production sites, built to learn how
+Monitoring + SLOs + auto-remediation for 4 real production sites, built to learn how
 Google-style SRE works in practice (SLIs/SLOs, error budgets, burn-rate alerts, chaos testing).
 
-- probes **kuponradar.pl**, **taxnieruchomosci.pl** and **alstrategika.com** every 30 s (HTTP, TLS, DNS)
+- probes **kuponradar.pl**, **taxnieruchomosci.pl**, **alstrategika.com** and **fratellolab.com** every 30 s (HTTP, TLS, DNS)
 - Prometheus + Grafana dashboards, **SLOs with error budgets** and **multi-window burn-rate alerts**
 - alerts go to Telegram through a small **remediator** service that also **fixes known failures by itself**
   (restart, rollback, disk cleanup) with safety limits
@@ -61,6 +61,7 @@ flowchart LR
         K[kuponradar.pl]
         T[taxnieruchomosci.pl]
         A[alstrategika.com]
+        F[fratellolab.com]
     end
 
     D[demo app<br/>broken on purpose]

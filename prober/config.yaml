@@ -17,3 +17,7 @@ sites:
   - name: alstrategika
     url: https://www.alstrategika.com
     expected_text: Aleksandra
+
+  - name: fratellolab
+    url: https://www.fratellolab.com
+    expected_text: FratelloLab

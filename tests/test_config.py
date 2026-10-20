@@ -6,7 +6,7 @@ from prober.config import load_config
 def test_default_config_loads():
     config = load_config()
     assert config.interval_seconds == 30
-    assert len(config.sites) == 3
+    assert len(config.sites) == 4
     assert config.sites[0].hostname == "kuponradar.pl"
 
 

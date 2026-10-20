@@ -2,7 +2,7 @@
 
 usage: python -m slo.rules > deploy/prometheus/rules/slo.rules.yml
 
-Writing these by hand for 3 sites x 2 SLOs x 8 windows was getting really error prone,
+Writing these by hand for every site x 2 SLOs x 8 windows was getting really error prone,
 so this script does it (similar idea to tools like sloth / pyrra, but way simpler).
 """
 

@@ -816,3 +816,275 @@ groups:
     annotations:
       summary: 'alstrategika: latency SLO is burning error budget too fast'
       description: error ratio {{ $value | humanizePercentage }}, objective 90.000%
+- name: slo-fratellolab-availability
+  rules:
+  - record: slo:sli_error:ratio_rate5m
+    expr: |-
+      sum(rate(probes_total{site="fratellolab",result="failure"}[5m]))
+      /
+      sum(rate(probes_total{site="fratellolab"}[5m]))
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:sli_error:ratio_rate30m
+    expr: |-
+      sum(rate(probes_total{site="fratellolab",result="failure"}[30m]))
+      /
+      sum(rate(probes_total{site="fratellolab"}[30m]))
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:sli_error:ratio_rate1h
+    expr: |-
+      sum(rate(probes_total{site="fratellolab",result="failure"}[1h]))
+      /
+      sum(rate(probes_total{site="fratellolab"}[1h]))
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:sli_error:ratio_rate2h
+    expr: |-
+      sum(rate(probes_total{site="fratellolab",result="failure"}[2h]))
+      /
+      sum(rate(probes_total{site="fratellolab"}[2h]))
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:sli_error:ratio_rate6h
+    expr: |-
+      sum(rate(probes_total{site="fratellolab",result="failure"}[6h]))
+      /
+      sum(rate(probes_total{site="fratellolab"}[6h]))
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:sli_error:ratio_rate1d
+    expr: |-
+      sum(rate(probes_total{site="fratellolab",result="failure"}[1d]))
+      /
+      sum(rate(probes_total{site="fratellolab"}[1d]))
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:sli_error:ratio_rate3d
+    expr: |-
+      sum(rate(probes_total{site="fratellolab",result="failure"}[3d]))
+      /
+      sum(rate(probes_total{site="fratellolab"}[3d]))
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:sli_error:ratio_rate30d
+    expr: |-
+      sum(rate(probes_total{site="fratellolab",result="failure"}[30d]))
+      /
+      sum(rate(probes_total{site="fratellolab"}[30d]))
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:sli_events:increase1h
+    expr: sum(increase(probes_total{site="fratellolab"}[1h]))
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:sli_events:increase6h
+    expr: sum(increase(probes_total{site="fratellolab"}[6h]))
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:sli_events:increase1d
+    expr: sum(increase(probes_total{site="fratellolab"}[1d]))
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:sli_events:increase3d
+    expr: sum(increase(probes_total{site="fratellolab"}[3d]))
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:objective:ratio
+    expr: vector(0.999)
+    labels:
+      site: fratellolab
+      slo: availability
+  - record: slo:error_budget_remaining:ratio
+    expr: 1 - (slo:sli_error:ratio_rate30d{site="fratellolab",slo="availability"} / 0.001)
+    labels:
+      site: fratellolab
+      slo: availability
+  - alert: ErrorBudgetBurnFast
+    expr: |-
+      (slo:sli_error:ratio_rate1h{site="fratellolab",slo="availability"} > 0.0144
+       and slo:sli_error:ratio_rate5m{site="fratellolab",slo="availability"} > 0.0144
+       and slo:sli_events:increase1h{site="fratellolab",slo="availability"} >= 60)
+      or
+      (slo:sli_error:ratio_rate6h{site="fratellolab",slo="availability"} > 0.006
+       and slo:sli_error:ratio_rate30m{site="fratellolab",slo="availability"} > 0.006
+       and slo:sli_events:increase6h{site="fratellolab",slo="availability"} >= 360)
+    for: 2m
+    labels:
+      severity: page
+      site: fratellolab
+      slo: availability
+    annotations:
+      summary: 'fratellolab: availability SLO is burning error budget too fast'
+      description: error ratio {{ $value | humanizePercentage }}, objective 99.900%
+  - alert: ErrorBudgetBurnSlow
+    expr: |-
+      (slo:sli_error:ratio_rate1d{site="fratellolab",slo="availability"} > 0.003
+       and slo:sli_error:ratio_rate2h{site="fratellolab",slo="availability"} > 0.003
+       and slo:sli_events:increase1d{site="fratellolab",slo="availability"} >= 1440)
+      or
+      (slo:sli_error:ratio_rate3d{site="fratellolab",slo="availability"} > 0.001
+       and slo:sli_error:ratio_rate6h{site="fratellolab",slo="availability"} > 0.001
+       and slo:sli_events:increase3d{site="fratellolab",slo="availability"} >= 4320)
+    for: 15m
+    labels:
+      severity: ticket
+      site: fratellolab
+      slo: availability
+    annotations:
+      summary: 'fratellolab: availability SLO is burning error budget too fast'
+      description: error ratio {{ $value | humanizePercentage }}, objective 99.900%
+- name: slo-fratellolab-latency
+  rules:
+  - record: slo:sli_error:ratio_rate5m
+    expr: |-
+      1 - (
+        sum(rate(probe_duration_seconds_bucket{site="fratellolab",le="1.5"}[5m]))
+        /
+        sum(rate(probe_duration_seconds_count{site="fratellolab"}[5m]))
+      )
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:sli_error:ratio_rate30m
+    expr: |-
+      1 - (
+        sum(rate(probe_duration_seconds_bucket{site="fratellolab",le="1.5"}[30m]))
+        /
+        sum(rate(probe_duration_seconds_count{site="fratellolab"}[30m]))
+      )
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:sli_error:ratio_rate1h
+    expr: |-
+      1 - (
+        sum(rate(probe_duration_seconds_bucket{site="fratellolab",le="1.5"}[1h]))
+        /
+        sum(rate(probe_duration_seconds_count{site="fratellolab"}[1h]))
+      )
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:sli_error:ratio_rate2h
+    expr: |-
+      1 - (
+        sum(rate(probe_duration_seconds_bucket{site="fratellolab",le="1.5"}[2h]))
+        /
+        sum(rate(probe_duration_seconds_count{site="fratellolab"}[2h]))
+      )
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:sli_error:ratio_rate6h
+    expr: |-
+      1 - (
+        sum(rate(probe_duration_seconds_bucket{site="fratellolab",le="1.5"}[6h]))
+        /
+        sum(rate(probe_duration_seconds_count{site="fratellolab"}[6h]))
+      )
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:sli_error:ratio_rate1d
+    expr: |-
+      1 - (
+        sum(rate(probe_duration_seconds_bucket{site="fratellolab",le="1.5"}[1d]))
+        /
+        sum(rate(probe_duration_seconds_count{site="fratellolab"}[1d]))
+      )
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:sli_error:ratio_rate3d
+    expr: |-
+      1 - (
+        sum(rate(probe_duration_seconds_bucket{site="fratellolab",le="1.5"}[3d]))
+        /
+        sum(rate(probe_duration_seconds_count{site="fratellolab"}[3d]))
+      )
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:sli_error:ratio_rate30d
+    expr: |-
+      1 - (
+        sum(rate(probe_duration_seconds_bucket{site="fratellolab",le="1.5"}[30d]))
+        /
+        sum(rate(probe_duration_seconds_count{site="fratellolab"}[30d]))
+      )
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:sli_events:increase1h
+    expr: sum(increase(probe_duration_seconds_count{site="fratellolab"}[1h]))
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:sli_events:increase6h
+    expr: sum(increase(probe_duration_seconds_count{site="fratellolab"}[6h]))
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:sli_events:increase1d
+    expr: sum(increase(probe_duration_seconds_count{site="fratellolab"}[1d]))
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:sli_events:increase3d
+    expr: sum(increase(probe_duration_seconds_count{site="fratellolab"}[3d]))
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:objective:ratio
+    expr: vector(0.9)
+    labels:
+      site: fratellolab
+      slo: latency
+  - record: slo:error_budget_remaining:ratio
+    expr: 1 - (slo:sli_error:ratio_rate30d{site="fratellolab",slo="latency"} / 0.1)
+    labels:
+      site: fratellolab
+      slo: latency
+  - alert: ErrorBudgetBurnFast
+    expr: |-
+      (slo:sli_error:ratio_rate6h{site="fratellolab",slo="latency"} > 0.6
+       and slo:sli_error:ratio_rate30m{site="fratellolab",slo="latency"} > 0.6
+       and slo:sli_events:increase6h{site="fratellolab",slo="latency"} >= 360)
+    for: 2m
+    labels:
+      severity: page
+      site: fratellolab
+      slo: latency
+    annotations:
+      summary: 'fratellolab: latency SLO is burning error budget too fast'
+      description: error ratio {{ $value | humanizePercentage }}, objective 90.000%
+  - alert: ErrorBudgetBurnSlow
+    expr: |-
+      (slo:sli_error:ratio_rate1d{site="fratellolab",slo="latency"} > 0.3
+       and slo:sli_error:ratio_rate2h{site="fratellolab",slo="latency"} > 0.3
+       and slo:sli_events:increase1d{site="fratellolab",slo="latency"} >= 1440)
+      or
+      (slo:sli_error:ratio_rate3d{site="fratellolab",slo="latency"} > 0.1
+       and slo:sli_error:ratio_rate6h{site="fratellolab",slo="latency"} > 0.1
+       and slo:sli_events:increase3d{site="fratellolab",slo="latency"} >= 4320)
+    for: 15m
+    labels:
+      severity: ticket
+      site: fratellolab
+      slo: latency
+    annotations:
+      summary: 'fratellolab: latency SLO is burning error budget too fast'
+      description: error ratio {{ $value | humanizePercentage }}, objective 90.000%

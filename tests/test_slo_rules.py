@@ -9,7 +9,7 @@ REPO = Path(__file__).parent.parent
 
 def test_load_slos_applies_defaults():
     slos = rules.load_slos()
-    assert len(slos) == 6  # 3 sites x (availability, latency)
+    assert len(slos) == 8  # 4 sites x (availability, latency)
     latency = [s for s in slos if s["slo"] == "latency"]
     assert all(s["threshold_seconds"] == 1.5 for s in latency)
 

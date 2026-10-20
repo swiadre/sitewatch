@@ -17,6 +17,10 @@ sites:
     url: https://www.alstrategika.com
     expected_text: Aleksandra
 
+  - name: fratellolab
+    url: https://www.fratellolab.com
+    expected_text: FratelloLab
+
   # local app that gets broken on purpose (chaos tests), probed more often
   - name: demo
     url: http://sitewatch-demo:8080/
