@@ -1,0 +1,10 @@
+{"scenario": "kill", "mode": "auto", "t0": 1792486066.4037418, "went_down_s": null, "mttd_s": null, "mttr_s": 0.0, "recovered": true, "no_failed_check": true, "action": null, "action_at_s": null, "run": 1}
+{"scenario": "kill", "mode": "auto", "t0": 1792486196.521885, "went_down_s": null, "mttd_s": null, "mttr_s": 0.0, "recovered": true, "no_failed_check": true, "action": null, "action_at_s": null, "run": 2}
+{"scenario": "kill", "mode": "auto", "t0": 1792486326.823692, "went_down_s": 0.77, "mttd_s": null, "mttr_s": 1.79, "recovered": true, "no_failed_check": false, "action": null, "action_at_s": null, "run": 3}
+{"scenario": "kill", "mode": "auto", "t0": 1792486399.662813, "went_down_s": null, "mttd_s": null, "mttr_s": 0.0, "recovered": true, "no_failed_check": true, "action": null, "action_at_s": null, "run": 4}
+{"scenario": "kill", "mode": "auto", "t0": 1792486529.96133, "went_down_s": 0.74, "mttd_s": null, "mttr_s": 1.76, "recovered": true, "no_failed_check": false, "action": null, "action_at_s": null, "run": 5}
+{"scenario": "kill", "mode": "auto", "t0": 1792486602.7753458, "went_down_s": null, "mttd_s": null, "mttr_s": 0.0, "recovered": true, "no_failed_check": true, "action": null, "action_at_s": null, "run": 6}
+{"scenario": "kill", "mode": "auto", "t0": 1792486732.998803, "went_down_s": 0.8, "mttd_s": null, "mttr_s": 1.82, "recovered": true, "no_failed_check": false, "action": null, "action_at_s": null, "run": 7}
+{"scenario": "kill", "mode": "auto", "t0": 1792486805.845083, "went_down_s": 0.73, "mttd_s": null, "mttr_s": 1.76, "recovered": true, "no_failed_check": false, "action": null, "action_at_s": null, "run": 8}
+{"scenario": "kill", "mode": "auto", "t0": 1792486878.6400309, "went_down_s": null, "mttd_s": null, "mttr_s": 0.0, "recovered": true, "no_failed_check": true, "action": null, "action_at_s": null, "run": 9}
+{"scenario": "kill", "mode": "auto", "t0": 1792487008.98829, "went_down_s": null, "mttd_s": null, "mttr_s": 0.0, "recovered": true, "no_failed_check": true, "action": null, "action_at_s": null, "run": 10}

@@ -54,14 +54,16 @@ def summarize(rows: list[dict]) -> list[dict]:
         fixers = {}
         for r in runs:
             if r["recovered"]:
-                acted_in_time = r.get("action") and (r.get("action_at_s") or 0) <= r["mttr_s"]
-                if r.get("no_failed_check"):
+                liveness = r.get("liveness_restart_s")
+                if liveness is not None and liveness <= (r.get("action_at_s") or 1e9):
+                    # the k8s livenessProbe restarted the app before the remediator acted
+                    # (from the kubelet event, see chaos/k8s_events.py)
+                    who = "k8s livenessProbe"
+                elif r.get("no_failed_check"):
                     who = "no visible downtime"
-                elif acted_in_time:
+                elif r.get("action"):
                     who = r["action"]
                 else:
-                    # the remediator acted after the app was already back (e.g. the k8s
-                    # livenessProbe restarted it first) -> it didn't fix anything
                     who = "kubernetes itself"
                 fixers[who] = fixers.get(who, 0) + 1
         summary.append(

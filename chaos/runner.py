@@ -163,6 +163,11 @@ def run_once(client: httpx.Client, scenario: Scenario, mode: str, timeout: float
         "action": action["action"] if action else None,
         "action_at_s": round(action["ts"] - t0, 2) if action else None,
     }
+    if TARGET == "k8s":
+        from chaos.k8s_events import liveness_restart_after, liveness_restart_times
+
+        until = t0 + (result["mttr_s"] or timeout) + 5
+        result["liveness_restart_s"] = liveness_restart_after(t0, until, liveness_restart_times())
     scenario.cleanup()
     return result
 

@@ -63,11 +63,18 @@ def test_invalid_runs_are_skipped(tmp_path):
     assert s["mttd_mean"] == 20
 
 
-def test_late_action_is_not_credited(tmp_path):
-    late = row("hang", "auto", 18.9, 18.6)
-    late.update(action="restart", action_at_s=18.9)  # app was back at 18.6 already
-    on_time = row("hang", "auto", 18.0, 18.5)
-    on_time.update(action="restart", action_at_s=18.1)
-    write(tmp_path, "hang-auto.jsonl", [late, on_time])
+def test_liveness_restart_is_credited_to_k8s(tmp_path):
+    k8s_first = row("hang", "auto", 18.9, 18.6)
+    k8s_first.update(action="restart", action_at_s=18.9, liveness_restart_s=16.0)
+    docker = row("hang", "auto", 18.0, 18.5)
+    docker.update(action="restart", action_at_s=18.6)  # no liveness info = docker run
+    write(tmp_path, "hang-auto.jsonl", [k8s_first, docker])
     (s,) = summarize(load(tmp_path))
-    assert s["fixed_by"] == "kubernetes itself 1×, restart 1×"
+    assert s["fixed_by"] == "k8s livenessProbe 1×, restart 1×"
+
+
+def test_liveness_after_remediator_is_not_credited():
+    from chaos.k8s_events import liveness_restart_after
+
+    assert liveness_restart_after(100, 130, [90, 116, 125]) == 16
+    assert liveness_restart_after(100, 110, [116]) is None

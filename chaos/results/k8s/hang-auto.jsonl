@@ -1,0 +1,3 @@
+{"scenario": "hang", "mode": "auto", "t0": 1792487139.1500769, "went_down_s": 2.01, "mttd_s": 18.88, "mttr_s": 18.6, "recovered": true, "no_failed_check": false, "action": "restart", "action_at_s": 18.92, "run": 1}
+{"scenario": "hang", "mode": "auto", "t0": 1792487233.79965, "went_down_s": 2.01, "mttd_s": 18.09, "mttr_s": 18.11, "recovered": true, "no_failed_check": false, "action": "restart", "action_at_s": 18.15, "run": 2}
+{"scenario": "hang", "mode": "auto", "t0": 1792487327.975105, "went_down_s": 2.01, "mttd_s": null, "mttr_s": 17.58, "recovered": true, "no_failed_check": false, "action": null, "action_at_s": null, "run": 3}
