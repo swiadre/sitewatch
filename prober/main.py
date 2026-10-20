@@ -1,7 +1,8 @@
 import asyncio
+import json
 import time
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import UTC, datetime
 
 import httpx
 
@@ -133,6 +134,37 @@ async def run(config: Config, once: bool = False) -> None:
         await asyncio.gather(*(site_loop(client, site, config.canary_url) for site in config.sites))
 
 
+def report_to_dict(r: SiteReport, region: str, inconclusive: bool = False) -> dict:
+    """One probe result as a flat dict (one JSON line in the data branch)."""
+    return {
+        "ts": datetime.now(UTC).isoformat(timespec="seconds"),
+        "site": r.site.name,
+        "region": region,
+        # None = we don't know (the canary failed too, so it was our network)
+        "up": None if inconclusive else r.up,
+        "status": r.http.status_code,
+        "ms": r.http.duration_ms,
+        "error": r.http.error or (None if r.http.text_found is not False else "TextMissing"),
+        "tls_days": r.tls.days_left,
+        "dns_ms": r.dns.duration_ms,
+    }
+
+
+async def run_json(config: Config, region: str) -> list[dict]:
+    """Probe every site once and return the results, used by the GitHub Actions prober."""
+    async with httpx.AsyncClient(timeout=config.timeout_seconds) as client:
+        reports = await probe_all(client, config)
+        results = []
+        for r in reports:
+            inconclusive = (
+                not r.up
+                and config.canary_url is not None
+                and not await canary_ok(client, config.canary_url)
+            )
+            results.append(report_to_dict(r, region, inconclusive))
+        return results
+
+
 def main() -> None:
     import argparse
 
@@ -140,9 +172,16 @@ def main() -> None:
     parser.add_argument("--config", default=None, help="path to config.yaml")
     parser.add_argument("--once", action="store_true", help="probe once and exit")
     parser.add_argument("--metrics-port", type=int, default=8000, help="0 = don't expose /metrics")
+    parser.add_argument("--json", action="store_true", help="probe once, print JSON lines")
+    parser.add_argument("--region", default="local", help="region label for --json output")
     args = parser.parse_args()
 
     config = load_config(args.config) if args.config else load_config()
+    if args.json:
+        for row in asyncio.run(run_json(config, args.region)):
+            print(json.dumps(row, ensure_ascii=False))
+        return
+
     if args.metrics_port and not args.once:
         metrics.start_metrics_server(args.metrics_port)
         print(f"metrics on http://localhost:{args.metrics_port}/metrics")

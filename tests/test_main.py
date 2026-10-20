@@ -104,3 +104,22 @@ async def test_site_down_canary_ok_is_a_real_failure():
         result = await probe_and_record(c, site, canary_url="https://canary.example")
     assert result is not None
     assert not result.up
+
+
+def test_report_to_dict():
+    from prober.checks.dns import DnsResult
+    from prober.checks.tls import TlsResult
+    from prober.config import Site
+    from prober.main import SiteReport, report_to_dict
+
+    r = SiteReport(
+        site=Site(name="s", url="https://example.com"),
+        http=HttpResult(ok=False, status_code=200, duration_ms=120, text_found=False),
+        tls=TlsResult(ok=True, days_left=40),
+        dns=DnsResult(ok=True, duration_ms=3),
+    )
+    d = report_to_dict(r, region="test")
+    assert d["up"] is False
+    assert d["error"] == "TextMissing"
+    assert d["region"] == "test"
+    assert report_to_dict(r, region="test", inconclusive=True)["up"] is None
