@@ -26,9 +26,12 @@ def liveness_restart_times() -> list[float]:
     times = []
     for ev in json.loads(out)["items"]:
         if ev.get("reason") == "Killing" and "liveness" in (ev.get("message") or ""):
-            ts = ev.get("firstTimestamp") or ev.get("eventTime")
-            times.append(datetime.fromisoformat(ts.replace("Z", "+00:00")).timestamp())
-    return sorted(times)
+            # repeated events on the same pod get merged into one (count > 1) and only keep
+            # the first and the last timestamp, the ones in between are lost
+            for key in ("firstTimestamp", "lastTimestamp", "eventTime"):
+                if ev.get(key):
+                    times.append(datetime.fromisoformat(ev[key].replace("Z", "+00:00")).timestamp())
+    return sorted(set(times))
 
 
 def liveness_restart_after(t0: float, until: float, times: list[float]) -> float | None:
