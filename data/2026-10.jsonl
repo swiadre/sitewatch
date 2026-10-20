@@ -10,3 +10,6 @@
 {"ts": "2026-10-20T16:38:20+00:00", "site": "kuponradar", "region": "github-actions", "up": true, "status": 200, "ms": 748.4, "error": null, "tls_days": 163.3, "dns_ms": 112.4}
 {"ts": "2026-10-20T16:38:20+00:00", "site": "taxnieruchomosci", "region": "github-actions", "up": true, "status": 200, "ms": 794.4, "error": null, "tls_days": 180.3, "dns_ms": 110.1}
 {"ts": "2026-10-20T16:38:20+00:00", "site": "alstrategika", "region": "github-actions", "up": true, "status": 200, "ms": 524.3, "error": null, "tls_days": 85.3, "dns_ms": 125.1}
+{"ts": "2026-10-20T16:40:42+00:00", "site": "kuponradar", "region": "github-actions", "up": true, "status": 200, "ms": 725.2, "error": null, "tls_days": 163.3, "dns_ms": 111.7}
+{"ts": "2026-10-20T16:40:42+00:00", "site": "taxnieruchomosci", "region": "github-actions", "up": true, "status": 200, "ms": 892.1, "error": null, "tls_days": 180.3, "dns_ms": 114.3}
+{"ts": "2026-10-20T16:40:42+00:00", "site": "alstrategika", "region": "github-actions", "up": true, "status": 200, "ms": 560.2, "error": null, "tls_days": 85.3, "dns_ms": 188.2}
