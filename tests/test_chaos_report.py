@@ -61,3 +61,13 @@ def test_invalid_runs_are_skipped(tmp_path):
     (s,) = summarize(load(tmp_path))
     assert s["runs"] == 1
     assert s["mttd_mean"] == 20
+
+
+def test_late_action_is_not_credited(tmp_path):
+    late = row("hang", "auto", 18.9, 18.6)
+    late.update(action="restart", action_at_s=18.9)  # app was back at 18.6 already
+    on_time = row("hang", "auto", 18.0, 18.5)
+    on_time.update(action="restart", action_at_s=18.1)
+    write(tmp_path, "hang-auto.jsonl", [late, on_time])
+    (s,) = summarize(load(tmp_path))
+    assert s["fixed_by"] == "kubernetes itself 1×, restart 1×"

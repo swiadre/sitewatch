@@ -54,10 +54,15 @@ def summarize(rows: list[dict]) -> list[dict]:
         fixers = {}
         for r in runs:
             if r["recovered"]:
+                acted_in_time = r.get("action") and (r.get("action_at_s") or 0) <= r["mttr_s"]
                 if r.get("no_failed_check"):
                     who = "no visible downtime"
+                elif acted_in_time:
+                    who = r["action"]
                 else:
-                    who = r.get("action") or "kubernetes itself"
+                    # the remediator acted after the app was already back (e.g. the k8s
+                    # livenessProbe restarted it first) -> it didn't fix anything
+                    who = "kubernetes itself"
                 fixers[who] = fixers.get(who, 0) + 1
         summary.append(
             {
