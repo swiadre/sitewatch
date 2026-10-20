@@ -38,6 +38,12 @@ jobs:
           mkdir -p data-branch/data
           python -m prober --json --region github-actions | tee -a "data-branch/data/$(date -u +%Y-%m).jsonl"
 
+      - name: Telegram alert if a site went down / came back
+        env:
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
+        run: python -m statuspage.alert --data data-branch/data
+
       - name: Save results to the data branch
         working-directory: data-branch
         run: |
