@@ -79,4 +79,7 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except httpx.HTTPError as e:
+        sys.exit(f"can't reach api.telegram.org ({type(e).__name__}), try again in a moment")
