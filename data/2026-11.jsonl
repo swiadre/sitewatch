@@ -24146,3 +24146,7 @@
 {"ts": "2026-11-21T18:15:44+00:00", "site": "taxnieruchomosci", "region": "github-actions", "up": true, "status": 200, "ms": 1609.0, "error": null, "tls_days": 148.2, "dns_ms": 178.5}
 {"ts": "2026-11-21T18:15:44+00:00", "site": "alstrategika", "region": "github-actions", "up": true, "status": 200, "ms": 397.5, "error": null, "tls_days": 53.2, "dns_ms": 68.9}
 {"ts": "2026-11-21T18:15:44+00:00", "site": "fratellolab", "region": "github-actions", "up": true, "status": 200, "ms": 338.3, "error": null, "tls_days": 41.0, "dns_ms": 231.3}
+{"ts": "2026-11-21T18:20:43+00:00", "site": "kuponradar", "region": "github-actions", "up": false, "status": null, "ms": null, "error": "ConnectError", "tls_days": null, "dns_ms": 181.1}
+{"ts": "2026-11-21T18:20:43+00:00", "site": "taxnieruchomosci", "region": "github-actions", "up": true, "status": 200, "ms": 796.8, "error": null, "tls_days": 148.2, "dns_ms": 341.5}
+{"ts": "2026-11-21T18:20:43+00:00", "site": "alstrategika", "region": "github-actions", "up": true, "status": 200, "ms": 449.7, "error": null, "tls_days": 53.2, "dns_ms": 82.6}
+{"ts": "2026-11-21T18:20:43+00:00", "site": "fratellolab", "region": "github-actions", "up": true, "status": 200, "ms": 465.2, "error": null, "tls_days": 41.0, "dns_ms": 357.4}
